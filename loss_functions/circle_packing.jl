@@ -1,6 +1,7 @@
 #try to minimize the free energy of a system of circles centered around the origin
 
 const diameters = [1, 1, 2, 2, 3, 4, 4, 4, 5, 6, 7, 7, 8, 8, 8, 8] # $10,000 sequence
+const n_params = 32
 
 function score(system::Vector{Float64})::Float64
 
@@ -15,7 +16,7 @@ function score(system::Vector{Float64})::Float64
             dist = euc_distance(x1, y1, x2, y2)
             min_dist = diameters[i]/2 + diameters[j]/2
             if dist < min_dist
-                free_energy += (min_dist - dist) * 1000
+                free_energy += (min_dist - dist) * 10000
             end
         end
     end

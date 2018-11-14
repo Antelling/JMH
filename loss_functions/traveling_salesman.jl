@@ -1,3 +1,5 @@
+const n_params = 100
+
 const cities = [
  [28, 31],
  [47, 7] ,

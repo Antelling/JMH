@@ -8,8 +8,9 @@ function search()
     best_s = Vector{Float64}()
     best_score = Inf
     while true
-        s = random_sample(score, 100)
-        s = simulated_annealing(s, score, temp=100, cooling_rate=.999, min_temp=.001)
+        s = random_sample(score, n_params)
+        s = simulated_annealing(s, score, range=1)
+        s = random_walk(s, score, max_failed_attempts=10000)
         new_score = score(s)
         if new_score < best_score
             best_score = new_score
