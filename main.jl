@@ -1,16 +1,17 @@
 include("loss_functions/traveling_salesman.jl")
 include("helpers/euc_distance.jl")
-include("algorithms/random_walk.jl")
-include("algorithms/random_sample.jl")
-include("algorithms/simulated_annealing.jl")
+include("optimizers/simulated_annealing.jl")
+include("perturbators/random_swap.jl")
 
-function search()
+function search_salesman(attempts::Int=9999999)
     best_s = Vector{Float64}()
     best_score = Inf
-    while true
-        s = random_sample(score, n_params)
-        s = simulated_annealing(s, score, range=1)
-        s = random_walk(s, score, max_failed_attempts=10000)
+
+    for _ in 1:attempts
+        s = Array(1:length(cities))
+        s = simulated_annealing(s, score, random_swap, attempt_max=200, acceptance_rate=.2, failed_temp_stages_max=5, cooling_rate=.93)
+        s = simulated_annealing(s, score, point_swap, acceptance_rate=.1, cooling_rate=.95, failed_temp_stages_max=5)
+
         new_score = score(s)
         if new_score < best_score
             best_score = new_score
@@ -20,4 +21,4 @@ function search()
     end
 end
 
-search()
+search_salesman()
