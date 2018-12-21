@@ -1,11 +1,15 @@
-function test_insertion(type::Type, n::Int)
-    tl = type{Vector{Float64}}()
+include("libraries/BloomFilter/bloom-filter.jl")
 
+import Base.push!, Base.in
+push!(a::BloomFilter, b) = add!(a, b)
+in(a::BloomFilter, b) = contains(a, b)
+
+function test_insertion(collection, n::Int)
     for x in 1:n
-        push!(tl, rand(5))
+        push!(collection, rand(5))
     end
 
-    return tl
+    return collection
 end
 
 function test_containment(data, n::Int)
@@ -16,13 +20,13 @@ function test_containment(data, n::Int)
     return total
 end
 
-for type in [Set, Vector]
-    println("testing $(type)")
+for collection in [Set{Vector{Float64}}(), BloomFilter(100000, .005)]
+    println("testing $(collection)")
 
-    test_insertion(type, 100)
-    @time data = test_insertion(type, 10000)
+    test_insertion(collection, 100)
+    @time data = test_insertion(collection, 100000)
 
     test_containment(data, 100)
-    @time collisions = test_containment(data, 100000)
+    @time collisions = test_containment(data, 10000000)
 
 end

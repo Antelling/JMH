@@ -4,6 +4,10 @@ using Printf
 
 include("probabilities.jl")
 
+import Base.push!, Base.in
+push!(a::BloomFilter, b) = add!(a, b)
+in(a::BloomFilter, b) = contains(a, b)
+
 mutable struct BloomFilter
     array::BitArray
     k::Int
@@ -87,9 +91,10 @@ end
 # additional memory accesses.
 # USE CASES: Recommended when extreme space efficiency is required, and modestly slower insertions
 # and lookups are tolerable.
-function BloomFilter(capacity::Int, error_rate::Float64)
+function BloomFilter(capacity::Int, error_rate::Float64; verbose::Bool=false)
     bits_per_elem = round(Int, ceil(-1.0 * (log(error_rate) / (log(2) ^ 2))))
     k_hashes = round(Int, log(2) * bits_per_elem)  # Note: ceil() would be strictly more conservative
+    if verbose println("calculated k_hashes: $(k_hashes)") end
     n_bits = capacity * bits_per_elem
     BloomFilter(falses((1, n_bits)), k_hashes, capacity, error_rate, n_bits, "")
 end
