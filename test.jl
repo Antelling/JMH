@@ -1,16 +1,28 @@
-function construct_function(range::Number, mean::Number)
-    return function(n) rand(n) .* range .+ mean end
+function test_insertion(type::Type, n::Int)
+    tl = type{Vector{Float64}}()
+
+    for x in 1:n
+        push!(tl, rand(5))
+    end
+
+    return tl
 end
 
-function doalot(f::Function, n::Int)
+function test_containment(data, n::Int)
     total = 0
-    println(n)
     for x in 1:n
-        total += f(1)[1]
+        total += in(rand(5), data)
     end
     return total
 end
 
-constructed = construct_function(1, 100)
-con2 = construct_function(1, 1)
-straight = function(n) rand(n) .* 1 .+ 100 end
+for type in [Set, Vector]
+    println("testing $(type)")
+
+    test_insertion(type, 100)
+    @time data = test_insertion(type, 10000)
+
+    test_containment(data, 100)
+    @time collisions = test_containment(data, 100000)
+
+end
