@@ -1,5 +1,5 @@
 """First half of TLBO algorithm. """
-function TBO(swarm::Swarm, problem::ProblemInstance)
+function TBO(swarm::Swarm, problem::ProblemInstance; repair=false)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -36,14 +36,18 @@ function TBO(swarm::Swarm, problem::ProblemInstance)
             new_solution[j] = difference_mean > 0
         end
 
-        if is_valid(new_solution, problem) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
+        valid = false
+        if repair && !is_valid(new_solution, problem)
+            valid, new_solution = repair_op(new_solution, problem)
+        end
+        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
             swarm[i] = new_solution
         end
     end
     return (swarm, best_score)
 end
 
-function LBO(swarm::Swarm, problem::ProblemInstance)
+function LBO(swarm::Swarm, problem::ProblemInstance; repair=false)
     n_dimensions = length(problem.objective)
     best_score = 0
 
@@ -86,7 +90,11 @@ function LBO(swarm::Swarm, problem::ProblemInstance)
             new_student[j] = new_bit
         end
 
-        if score_solution(new_student, problem) > student_score && is_valid(new_student, problem) && !(new_student in swarm)
+        valid = false
+        if repair && !is_valid(new_student, problem)
+            valid, new_student = repair_op(new_student, problem)
+        end
+        if score_solution(new_student, problem) > student_score && (valid || is_valid(new_student, problem)) && !(new_student in swarm)
             swarm[student_index] = new_student
         end
     end

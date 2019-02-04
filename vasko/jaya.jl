@@ -1,5 +1,5 @@
 """http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf"""
-function jaya(swarm::Swarm, problem::ProblemInstance)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
@@ -29,9 +29,12 @@ function jaya(swarm::Swarm, problem::ProblemInstance)
             #so we use this value check to convert to Bool
             new_solution[j] = new_bit > 0
         end
-        old_score = score_solution(solution, problem)
-        new_score = score_solution(new_solution, problem)
-        if new_score > old_score && is_valid(new_solution, problem) && !(new_solution in swarm)
+
+        valid = false
+        if repair && !is_valid(new_solution, problem)
+            valid, new_solution = repair_op(new_solution, problem)
+        end
+        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(solution, problem) && !(new_solution in swarm)
             swarm[i] = new_solution
         end
     end
