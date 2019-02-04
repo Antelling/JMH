@@ -22,7 +22,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
         solution = swarm[i]
         new_solution = copy(solution)
         for j in 1:n_dimensions
-            new_bit = solution[j] + rand([0, 1])*(best_solution[j]-abs(solution[j])) - rand([0, 1])*(worst_solution[j]-abs(solution[j]))
+            new_bit = solution[j] + rand([0, 1])*(best_solution[j]-solution[j]) - rand([0, 1])*(worst_solution[j]-solution[j])
 
             #this formula produces ranges from -1 to 2, which will upset our Bool function
             #so we use this value check to convert to Bool
