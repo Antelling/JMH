@@ -31,7 +31,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance)
         end
         old_score = score_solution(solution, problem)
         new_score = score_solution(new_solution, problem)
-        if new_score > old_score && is_valid(new_solution, problem)
+        if new_score > old_score && is_valid(new_solution, problem) && !(new_solution in swarm)
             swarm[i] = new_solution
         end
     end

@@ -8,8 +8,6 @@ function TBO(swarm::Swarm, problem::ProblemInstance)
         means .+= s
     end
     means ./= n_dimensions
-    #means is a list of floats of like .08, .10, .02
-    #we want to make means discrete
 
     #now we find the best solution
     best_solution::BitList = []
@@ -30,11 +28,12 @@ function TBO(swarm::Swarm, problem::ProblemInstance)
         tf = rand([1, 2]) #this is just some random param that is chosen for each learner
 
         for j in 1:n_dimensions
-            difference_mean = new_solution[j] + rand()*(best_solution[j]-tf*means[j])
-            #print(" ", difference_mean, " ")
-            #FIXME: I don't think TBO is meant to produce discrete solutions, because this is
-            #giving me a range of values from -.5 to 1. How do I make that discrete? Let's try this:
-            new_solution[j] = difference_mean > 1
+            #we need to make means[j] discrete
+            #let's treat it like a probability
+            #FIXME: discuss with Vasko
+            m = rand() < means[j]
+            difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*m)
+            new_solution[j] = difference_mean > 0
         end
 
         if is_valid(new_solution, problem) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
@@ -52,11 +51,16 @@ function LBO(swarm::Swarm, problem::ProblemInstance)
     #but it doesn't say how many times to do that so I'm just going to loop over every s in swarm
     #FIXME: discuss with Vasko. But it seems to work well
     for i in 1:length(swarm)
+        #println(i)
         first_learner = swarm[i]
+
+        #over time, the swarm will converge to several identical solutions
+        #eventually only one solution will exist
         second_learner_index = rand(1:length(swarm))
         second_learner = swarm[second_learner_index]
         while second_learner == first_learner
-            second_learner = rand(swarm)
+            second_learner_index = rand(1:length(swarm))
+            second_learner = swarm[second_learner_index]
         end
 
         first_learner_score = score_solution(first_learner, problem)
@@ -82,7 +86,7 @@ function LBO(swarm::Swarm, problem::ProblemInstance)
             new_student[j] = new_bit
         end
 
-        if score_solution(new_student, problem) > student_score
+        if score_solution(new_student, problem) > student_score && is_valid(new_student, problem) && !(new_student in swarm)
             swarm[student_index] = new_student
         end
     end

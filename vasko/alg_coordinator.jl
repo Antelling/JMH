@@ -1,4 +1,4 @@
-function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance, n_fails::Int=5; verbose=0)
+function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fails::Int=5, verbose=0)
     failed_steps = 0
     prev_best_score = 0
 
@@ -26,5 +26,39 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance, n_fa
         println("")
         println("$(n_fails) fails reached, exceeds n_fails, stopping")
     end
-    return swarm
+
+    return (swarm, prev_best_score)
+end
+
+"""Randomly walk through all three algorithms. A complete cycle with no improvement is needed to stop."""
+function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance; verbose::Int=1)
+    #we need to go through all three algs with no improvement in order to stop
+    prev_prev_alg = ""
+    prev_alg = ""
+    fails = 0
+    best_score = 0
+    while fails < 3
+        alg = rand(algs)
+        while "$(alg)" == prev_alg || alg == prev_prev_alg
+            alg = rand(algs)
+        end
+        swarm, current_score = iterate_alg(alg, swarm, problem)
+        if current_score > best_score
+            fails = 0
+            best_score = current_score
+            if verbose >= 1
+                println("    improvement produced by $(alg)")
+            end
+            #since this alg worked, the previous alg is back in the list of possible choices
+            prev_alg = ""
+        else
+            fails += 1
+            if verbose >= 2
+                println("      $(alg) failed to improve")
+            end
+        end
+        prev_prev_alg = prev_alg
+        prev_alg = "$(alg)"
+    end
+    return (swarm, best_score)
 end
