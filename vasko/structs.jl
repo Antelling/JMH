@@ -5,3 +5,5 @@ struct ProblemInstance
 end
 
 BitList = Vector{Bool}
+
+Swarm = Vector{BitList}

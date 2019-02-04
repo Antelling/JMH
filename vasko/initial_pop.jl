@@ -23,7 +23,7 @@ function random_initialize(problem::ProblemInstance, n_solutions::Int=50; verbos
             end
             passes += 1
         else
-            if verbose >= 2
+            if verbose >= 3
                 print("👿")
             end
             fails += 1
@@ -32,13 +32,8 @@ function random_initialize(problem::ProblemInstance, n_solutions::Int=50; verbos
     if verbose >= 1
         println("\n$(n_solutions) solutions found, success rate of $(round(10000*passes/(passes+fails))/100)%, exiting")
     end
-    return valid_solutions
+    return collect(valid_solutions) #turn from set into vector FIXME: discuss with Vasko
 end
-
-include("parse_data.jl")
-problem = parse_file("data/mdmkp_ct1.txt")[1]
-random_initialize(problem, verbose=2)
-
 
 #TODO: implement Vasko's method
 #TODO: implement backtrack method
