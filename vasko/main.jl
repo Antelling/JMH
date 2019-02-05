@@ -1,24 +1,17 @@
 include("parse_data.jl")
-problem = parse_file("data/mdmkp_ct8.txt")[6]
+problems = parse_file("data/mdmkp_ct1.txt")
 
 include("initial_pop.jl")
 include("eval_solution.jl")
 include("eval_problem.jl")
 include("repair_op.jl")
-swarm = random_init(problem, 100, verbose=2, repair=false)
-println("")
 
 include("alg_coordinator.jl")
 include("jaya.jl")
 include("tlbo.jl")
 
-for alg in [jaya, LBO, TBO]
-    println("testing single algorithm $(alg)...")
-    _, best_score = iterate_alg(alg, copy(swarm), problem)
-    println("produced score $(best_score)")
-    println("")
+for problem in problems[1:10]
+    swarm = random_init(problem, 100, repair=false)
+    swarm, best_score = walk_through_algs([jaya, TBO, LBO], swarm, problem, verbose=2)
+    println(best_score)
 end
-
-println("testing all three algorithms...")
-swarm, best_score = walk_through_algs([jaya, TBO, LBO], copy(swarm), problem, verbose=2, repair=false)
-println("produced score $(best_score)")
