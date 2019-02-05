@@ -42,7 +42,6 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
         while "$(alg)" == prev_alg || "$(alg)" == prev_prev_alg
             alg = rand(algs)
         end
-        println("       $(alg) is not $(prev_alg) or $(prev_prev_alg)")
         swarm, current_score = iterate_alg(alg, swarm, problem, repair=repair)
         if current_score > best_score
             fails = 0
