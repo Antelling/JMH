@@ -1,5 +1,6 @@
 """get inclusive (min, max) tuple of the range sum(BitList) may return"""
-function get_solution_range(problem::ProblemInstance)
+function get_solution_range(p::ProblemInstance)
+    problem = deepcopy(p) #FIXME: this is hacky and slow but it doesn't matter much right now
     max_value = min([get_max_on(bound[1], bound[2]) for bound in problem.upper_bounds]...)
     min_value = max([get_min_on(bound[1], bound[2]) for bound in problem.lower_bounds]...)
     return (min_value, max_value)

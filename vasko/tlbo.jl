@@ -1,5 +1,5 @@
 """First half of TLBO algorithm. """
-function TBO(swarm::Swarm, problem::ProblemInstance; repair=false)
+function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -28,11 +28,55 @@ function TBO(swarm::Swarm, problem::ProblemInstance; repair=false)
         tf = rand([1, 2]) #this is just some random param that is chosen for each learner
 
         for j in 1:n_dimensions
-            #we need to make means[j] discrete
-            #let's treat it like a probability
-            #FIXME: discuss with Vasko
             m = rand() < means[j]
             difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*m)
+            new_solution[j] = difference_mean > 0
+        end
+
+        valid = false
+        if repair && !is_valid(new_solution, problem)
+            valid, new_solution = repair_op(new_solution, problem)
+        end
+        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
+            swarm[i] = new_solution
+        end
+    end
+    return (swarm, best_score)
+end
+
+"""uses the Vasko and Lu median method instead of my probability method"""
+function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
+    n_dimensions = length(problem.objective)
+
+    #first we need to get the mean for each dimension
+    means::Vector{Float64} = zeros(n_dimensions)
+    for s in swarm
+        means .+= s
+    end
+    means ./= n_dimensions
+    #the if the median is true, the mean will be > .5
+    medians::Vector{Bool} = [m > .5 for m in means]
+
+    #now we find the best solution
+    best_solution::BitList = []
+    best_score = 0
+    for solution in swarm
+        current_score = score_solution(solution, problem)
+        if current_score > best_score
+            best_score = current_score
+            best_solution = solution
+        end
+    end
+
+    #now we apply the TBO transformation to each element of the data, and accept the change if the
+    #score improves
+    for i in 1:length(swarm)
+        new_solution = copy(swarm[i])
+
+        tf = rand([1, 2]) #this is just some random param that is chosen for each learner
+
+        for j in 1:n_dimensions
+            difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*medians[j])
             new_solution[j] = difference_mean > 0
         end
 

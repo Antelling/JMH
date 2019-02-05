@@ -10,6 +10,7 @@ function parse_file(filename)
     amount_of_problems = next_line(f)[1]
 
     #so now for every problem:
+    problem_index = 1
     for problem in 1:amount_of_problems
         n, m = next_line(f)
         lower_than_values::Vector{Vector{Int}} = []
@@ -40,8 +41,10 @@ function parse_file(filename)
             push!(problems, ProblemInstance(
                 cost_coefficient_values[i],
                 upper_bounds,
-                lower_bounds[1:q[i]]
+                lower_bounds[1:q[i]],
+                problem_index
             ))
+            problem_index += 1
         end
     end
 

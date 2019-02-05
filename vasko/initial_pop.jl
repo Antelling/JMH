@@ -2,6 +2,7 @@
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""
 function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, repair=true)
+    orig_p = "$(problem)"
     r = get_solution_range(problem)
     v = length(problem.objective)
     percentage = sum(r)/(2v)
@@ -39,7 +40,7 @@ function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, r
     if verbose >= 1
         println("\n$(n_solutions) solutions found, success rate of $(round(10000*passes/(passes+fails))/100)%, exiting")
     end
-    return collect(valid_solutions) #turn from set into vector FIXME: discuss with Vasko
+    return collect(valid_solutions)
 end
 
 
