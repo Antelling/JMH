@@ -10,8 +10,8 @@ include("alg_coordinator.jl")
 include("jaya.jl")
 include("tlbo.jl")
 
-for problem in problems[1:10]
+for problem in problems[1:90]
     swarm = random_init(problem, 100, repair=false)
     swarm, best_score = walk_through_algs([jaya, TBO, LBO], swarm, problem, verbose=0)
-    println(best_score)
+    print(best_score, " ")
 end
