@@ -1,7 +1,7 @@
 """if we sample with a biased probability, a normal distribution of turned on
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""
-function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, repair=true)
+function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, repair=false)
     orig_p = "$(problem)"
     r = get_solution_range(problem)
     v = length(problem.objective)

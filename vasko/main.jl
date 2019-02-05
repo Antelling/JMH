@@ -10,24 +10,31 @@ include("alg_coordinator.jl")
 include("jaya.jl")
 include("tlbo.jl")
 
-function get_best(swarm::Swarm, problem::ProblemInstance)
-    best_sol::BitList = []
-    best_score = 0
-    for solution in swarm
-        s = score_solution(solution, problem)
-        if s > best_score
-            best_score = s
-            best_sol = solution
+import JSON
+
+for dataset in 1:9
+    problems = parse_file("data/mdmkp_ct$(dataset).txt")
+    results = Dict{String,Vector{Int}}("jaya"=>[],"TBO_prob"=>[],"TBO_med"=>[],"LBO"=>[], "triplicate"=>[])
+    for problem in problems
+        println("")
+        println("testing problem #$(problem.index)")
+
+        p = "$(problem)"
+
+        swarm = random_init(problem, 100, repair=false)
+        for alg in [jaya, TBO_prob, TBO_med, LBO]
+            _, best_score = iterate_alg(alg, deepcopy(swarm), problem)
+            println("  $(alg) found max score of $(best_score)")
+            push!(results["$(alg)"], best_score)
         end
+
+        _, best_score = walk_through_algs([jaya, TBO_med, LBO], swarm, problem)
+        println("  triplicate found max score of $(best_score)")
+        push!(results["triplicate"], best_score)
+
+        @assert p == "$(problem)" #assure we don't have any more mutation
     end
-    return (best_score, best_sol)
-end
-
-for problem in problems[1:6:90]
-    swarm = random_init(deepcopy(problem), 100, repair=false)
-    swarm, best_score = walk_through_algs([jaya, TBO, LBO], swarm, problem, verbose=0)
-
-    best_score, best_sol = get_best(swarm, problem)
-    println(best_score)
-    #println(is_valid(best_sol, problem))
+    open("results/dataset_$(dataset).json", "w") do f
+        write(f, JSON.json(results))
+    end
 end

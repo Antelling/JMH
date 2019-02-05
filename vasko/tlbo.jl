@@ -45,7 +45,7 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
 end
 
 """uses the Vasko and Lu median method instead of my probability method"""
-function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
+function TBO_med(swarm::Swarm, problem::ProblemInstance; repair=false)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension

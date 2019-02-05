@@ -31,7 +31,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 end
 
 """Randomly walk through all three algorithms. A complete cycle with no improvement is needed to stop."""
-function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance; verbose::Int=1, repair=false)
+function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair=false)
     #we need to go through all three algs with no improvement in order to stop
     prev_prev_alg = ""
     prev_alg = ""
