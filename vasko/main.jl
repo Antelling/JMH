@@ -12,7 +12,7 @@ include("tlbo.jl")
 
 import JSON
 
-for dataset in 1:9
+for dataset in [5, 6]
     problems = parse_file("data/mdmkp_ct$(dataset).txt")
     results = Dict{String,Vector{Int}}("jaya"=>[],"TBO_prob"=>[],"TBO_med"=>[],"LBO"=>[], "triplicate"=>[])
     for problem in problems
@@ -33,8 +33,9 @@ for dataset in 1:9
         push!(results["triplicate"], best_score)
 
         @assert p == "$(problem)" #assure we don't have any more mutation
-    end
-    open("results/dataset_$(dataset).json", "w") do f
-        write(f, JSON.json(results))
+	open("results/dataset_$(dataset).json", "w") do f
+        	write(f, JSON.json(results))
+    	end
+
     end
 end
