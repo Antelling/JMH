@@ -29,6 +29,10 @@ function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, r
                         print("😊")
                     end
                     passes += 1
+                elseif verbose >= 3
+                    print("👿") #there's a little devil emoji here but it doesn't always render
+                else
+                    fails += 1
                 end
             elseif verbose >= 3
                 print("👿") #there's a little devil emoji here but it doesn't always render
