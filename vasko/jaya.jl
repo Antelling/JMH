@@ -20,14 +20,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
 
     for i in 1:length(swarm)
         solution = swarm[i]
-        new_solution = copy(solution)
-        for j in 1:n_dimensions #FIXME: v v v slow bc unpredictable: do a map instead
-            new_bit = solution[j] + rand([0, 1])*(best_solution[j]-solution[j]) - rand([0, 1])*(worst_solution[j]-solution[j])
-
-            #this formula produces ranges from -1 to 2, which will upset our Bool function
-            #so we use this value check to convert to Bool
-            new_solution[j] = new_bit > 0
-        end
+        new_solution = jaya_perturb(solution, best_solution, worst_solution)
 
         valid = false
         if repair && !is_valid(new_solution, problem)
