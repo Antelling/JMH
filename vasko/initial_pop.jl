@@ -1,3 +1,5 @@
+#FIXME: make vasko's and benchmark repair 
+
 """if we sample with a biased probability, a normal distribution of turned on
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""

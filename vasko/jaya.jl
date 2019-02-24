@@ -21,7 +21,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
     for i in 1:length(swarm)
         solution = swarm[i]
         new_solution = copy(solution)
-        for j in 1:n_dimensions
+        for j in 1:n_dimensions #FIXME: v v v slow bc unpredictable: do a map instead
             new_bit = solution[j] + rand([0, 1])*(best_solution[j]-solution[j]) - rand([0, 1])*(worst_solution[j]-solution[j])
 
             #this formula produces ranges from -1 to 2, which will upset our Bool function
@@ -38,4 +38,9 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
         end
     end
     return (swarm, best_score)
+end
+
+"""apply the internal jaya transformation to a single solution in the swarm"""
+function jaya_perturb(solution::BitList, best_solution::BitList, worst_solution::BitList)
+    return [bit + rand([0, 1])*(best_solution[i]-bit) - rand([0, 1])*(worst_solution[i]-bit) > 0 for (i, bit) in enumerate(solution)]
 end

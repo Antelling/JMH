@@ -62,6 +62,3 @@ end
 function parse_int(x)
     return parse(Int, x)
 end
-
-#this doesn't go anywhere but forces everything to be compiled
-parse_file("data/mdmkp_ct1.txt")

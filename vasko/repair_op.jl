@@ -1,5 +1,5 @@
 """Vasko's Simple Repair Op"""
- function VSRO(solution::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
+function VSRO(solution::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
     solution = deepcopy(solution)
     #we can assume that because this was called the solution is not feasible
     #we need to get the values for the objective and every bound
@@ -7,43 +7,43 @@
     upper_values::Vector{Int} = [sum(solution .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(solution .* bound[1]) for bound in problem.lower_bounds]
 
-    fails = 0
-    max_fails = 2
+    fails::Int = 0
+    max_fails::Int = 2
     while fails < max_fails
         least_infeasible::Int = typemax(Int)
-        least_inf_bit_i = 0
+        least_inf_bit_i::Int = 0
 
-        best_feasible_objective = 0
-        best_feasible_bit_index = 0
-        feasible = false
+        best_feasible_objective::Int = 0
+        best_feasible_bit_index::Int = 0
+        feasible::Bool = false
 
-        for i in 1:length(solution) #loop over every bit in the solution
+        for (i, bit) in enumerate(solution) #loop over every bit in the solution
             infeasibility_total::Int = 0
 
             #loop over upper bounds
-            for j in 1:length(problem.upper_bounds)
+            for (j, upper_bound) in enumerate(problem.upper_bounds)
                 new_bound_total::Int = upper_values[j]
-                if solution[i]
+                if bit
                     #if the bit was turned on, turn it off, so subtract the bounds value for this bit
-                    new_bound_total -= problem.upper_bounds[j][1][i]
+                    new_bound_total -= upper_bound[1][i]
                 else
-                    new_bound_total += problem.upper_bounds[j][1][i]
+                    new_bound_total += upper_bound[1][i]
                 end
-                if new_bound_total > problem.upper_bounds[j][2]
-                    infeasibility_total += new_bound_total - problem.upper_bounds[j][2]
+                if new_bound_total > upper_bound[2]
+                    infeasibility_total += new_bound_total - upper_bound[2]
                 end
             end
 
             #loop over lower bounds
-            for j in 1:length(problem.lower_bounds)
+            for (j, lower_bound) in enumerate(problem.lower_bounds)
                 new_bound_total::Int = lower_values[j]
-                if solution[i]
-                    new_bound_total -= problem.lower_bounds[j][1][i]
+                if bit
+                    new_bound_total -= lower_bound[1][i]
                 else
-                    new_bound_total += problem.lower_bounds[j][1][i]
+                    new_bound_total += lower_bound[1][i]
                 end
-                if new_bound_total < problem.lower_bounds[j][2]
-                    infeasibility_total += problem.upper_bounds[j][2] - new_bound_total
+                if new_bound_total < lower_bound[2]
+                    infeasibility_total += new_bound_total - lower_bound[2]
                 end
             end
 
@@ -54,7 +54,7 @@
 
             if infeasibility_total == 0
                 current_objective = objective_value
-                if solution[i]
+                if bit
                     current_objective -= problem.objective[i]
                 else
                     current_objective += problem.objective[i]
@@ -76,6 +76,7 @@
     end
     return (false, solution)
 end
+
 
 """Least Squares Repair Op
 I don't feel like doing VSRO properly so let's cheat and pretend it's a linear thing
@@ -108,4 +109,4 @@ function LSRO(solution::BitList, problem::ProblemInstance)
 end
 
 
-const repair_op = VSRO
+repair_op = VSRO

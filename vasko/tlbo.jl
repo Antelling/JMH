@@ -27,7 +27,7 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
 
         tf = rand([1, 2]) #this is just some random param that is chosen for each learner
 
-        for j in 1:n_dimensions
+        for j in 1:n_dimensions #FIXME: also slow, not as bad as jaya, but still change to a map
             m = rand() < means[j]
             difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*m)
             new_solution[j] = difference_mean > 0
