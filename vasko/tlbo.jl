@@ -23,15 +23,7 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
     #now we apply the TBO transformation to each element of the data, and accept the change if the
     #score improves
     for i in 1:length(swarm)
-        new_solution = copy(swarm[i])
-
-        tf = rand([1, 2]) #this is just some random param that is chosen for each learner
-
-        for j in 1:n_dimensions #FIXME: also slow, not as bad as jaya, but still change to a map
-            m = rand() < means[j]
-            difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*m)
-            new_solution[j] = difference_mean > 0
-        end
+        new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
 
         valid = false
         if repair && !is_valid(new_solution, problem)
@@ -42,6 +34,13 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
         end
     end
     return (swarm, best_score)
+end
+
+function TBO_prob_perturb(solution::BitList, best_solution::BitList, means::Vector{Float64})
+    #this is terrible and unreadable but super fast
+    #the rand([1, 2]) is the tf value. Which isn't a parameter just a random number
+    #rand() < means[i] is how I made the means[] discrete. It works better than using the median
+    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
 end
 
 """uses the Vasko and Lu median method instead of my probability method"""
@@ -71,14 +70,7 @@ function TBO_med(swarm::Swarm, problem::ProblemInstance; repair=false)
     #now we apply the TBO transformation to each element of the data, and accept the change if the
     #score improves
     for i in 1:length(swarm)
-        new_solution = copy(swarm[i])
-
-        tf = rand([1, 2]) #this is just some random param that is chosen for each learner
-
-        for j in 1:n_dimensions #FIXME: AAAAH STUPID PHYSICS
-            difference_mean = new_solution[j] + rand([0,1])*(best_solution[j]-tf*medians[j])
-            new_solution[j] = difference_mean > 0
-        end
+        new_solution = TBO_med_perturb(swarm[i], best_solution, medians)
 
         valid = false
         if repair && !is_valid(new_solution, problem)
@@ -89,6 +81,12 @@ function TBO_med(swarm::Swarm, problem::ProblemInstance; repair=false)
         end
     end
     return (swarm, best_score)
+end
+
+function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vector{Bool})
+    #this perturb function uses the Vasko/Lu method of making the mean[] discrete: take the median
+    #it's still unreadable but julia always knows what's coming next so it's fast
+    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
 function LBO(swarm::Swarm, problem::ProblemInstance; repair=false)

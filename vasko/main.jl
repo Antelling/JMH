@@ -29,7 +29,7 @@ function main()
 			"triplicate_med_no_repair"=>[]
 		)
 
-	    for problem in problems[1:10]
+	    for problem in problems[1:2]
 	        println("")
 	        println("testing problem #$(problem.index)")
 
