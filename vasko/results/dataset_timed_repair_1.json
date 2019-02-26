@@ -1,0 +1,74 @@
+{
+    "TBO_med_no_repair": [
+        [
+            22991,
+            0.018565689
+        ]
+    ],
+    "TBO_prob_repair": [
+        [
+            25724,
+            1.062685224
+        ]
+    ],
+    "triplicate_med_no_repair": [
+        [
+            27665,
+            0.295282943
+        ]
+    ],
+    "triplicate_med_repair": [
+        [
+            29897,
+            1.76806403
+        ]
+    ],
+    "LBO_repair": [
+        [
+            26884,
+            0.628405933
+        ]
+    ],
+    "TBO_prob_no_repair": [
+        [
+            23871,
+            0.040260604
+        ]
+    ],
+    "jaya_no_repair": [
+        [
+            22991,
+            0.026086271
+        ]
+    ],
+    "TBO_med_repair": [
+        [
+            22991,
+            0.570436885
+        ]
+    ],
+    "LBO_no_repair": [
+        [
+            22991,
+            0.01387581
+        ]
+    ],
+    "triplicate_prob_repair": [
+        [
+            26943,
+            0.524767056
+        ]
+    ],
+    "triplicate_prob_no_repair": [
+        [
+            26682,
+            0.20442845
+        ]
+    ],
+    "jaya_repair": [
+        [
+            28540,
+            2.903197097
+        ]
+    ]
+}

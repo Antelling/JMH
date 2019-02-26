@@ -1,6 +1,6 @@
 """Vasko's Simple Repair Op"""
-function VSRO(solution::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
-    solution = deepcopy(solution)
+function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
+    solution = deepcopy(sol)
     #we can assume that because this was called the solution is not feasible
     #we need to get the values for the objective and every bound
     objective_value = sum(problem.objective .* solution)
@@ -37,15 +37,25 @@ function VSRO(solution::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
             #loop over lower bounds
             for (j, lower_bound) in enumerate(problem.lower_bounds)
                 new_bound_total::Int = lower_values[j]
+                println("")
+                println(infeasibility_total)
+                println(new_bound_total)
+                println(lower_bound[1][i])
+                println(bit)
                 if bit
                     new_bound_total -= lower_bound[1][i]
                 else
                     new_bound_total += lower_bound[1][i]
                 end
                 if new_bound_total < lower_bound[2]
-                    infeasibility_total += new_bound_total - lower_bound[2]
+                    infeasibility_total += lower_bound[2] - new_bound_total
                 end
+                println(new_bound_total)
+                println(lower_bound[2])
+                println(infeasibility_total)
             end
+
+            #readline(stdin)
 
             if infeasibility_total < least_infeasible
                 least_infeasible = infeasibility_total
@@ -66,46 +76,29 @@ function VSRO(solution::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
                 feasible = true
             end
         end
+
         if feasible
             solution[best_feasible_bit_index] = !solution[best_feasible_bit_index]
+            @assert is_valid(solution, problem)
             return (true, solution)
         end
+
+        #we didn't find a valid solution, so change to the least infeasible
+        #solution found and run through again
         solution[least_inf_bit_i] = !solution[least_inf_bit_i]
+        #we also need to update the objective upper and lower values
+        plus_or_minus = solution[least_inf_bit_i] ? 1 : -1
+        objective_value += problem.objective[least_inf_bit_i] * plus_or_minus
+        for i in 1:length(problem.upper_bounds)
+            upper_values[i] += problem.upper_bounds[i][1][least_inf_bit_i] * plus_or_minus
+        end
+        for i in 1:length(problem.lower_bounds)
+            lower_values[i] += problem.lower_bounds[i][1][least_inf_bit_i] * plus_or_minus
+        end
 
         fails += 1
     end
     return (false, solution)
-end
-
-
-"""Least Squares Repair Op
-I don't feel like doing VSRO properly so let's cheat and pretend it's a linear thing
-"""
-function LSRO(solution::BitList, problem::ProblemInstance)
-    #we can assume that because this function was called, the solution is not valid
-    valid = false
-    #now we loop until we are valid, or 5 times
-    i = 0
-    while !valid && i < 5
-        i += 1
-        #we need to calculate the importance of each constraint
-        #importance is error^2
-        #and if the constraint is satisfied its -(error^2)
-        weights::Vector{Int} = []
-        for (bounds, comparison) in [(problem.upper_bounds, <=), (problem.lower_bounds, >=)]
-            for bound in bounds
-                score = sum(solution .* bound[1])
-                lse = (score - bound[2])^2
-                if comparison(score, bound[2])
-                    lse *= -1
-                end
-                push!(weights, lse)
-            end
-        end
-
-        println(weights)
-
-    end
 end
 
 
