@@ -25,12 +25,23 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
     for i in 1:length(swarm)
         new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
 
-        valid = false
-        if repair && !is_valid(new_solution, problem)
-            valid, new_solution = repair_op(new_solution, problem)
+        val = is_valid(new_solution, problem)
+        if !val
+            if repair
+                val, new_solution = repair_op(new_solution, problem)
+                if !val
+                    continue
+                end
+            else
+                continue
+            end
         end
-        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
+        s = score_solution(new_solution, problem)
+        if s > score_solution(swarm[i], problem)
             swarm[i] = new_solution
+            if s > best_score
+                best_score = s
+            end
         end
     end
     return (swarm, best_score)
@@ -72,12 +83,23 @@ function TBO_med(swarm::Swarm, problem::ProblemInstance; repair=false)
     for i in 1:length(swarm)
         new_solution = TBO_med_perturb(swarm[i], best_solution, medians)
 
-        valid = false
-        if repair && !is_valid(new_solution, problem)
-            valid, new_solution = repair_op(new_solution, problem)
+        val = is_valid(new_solution, problem)
+        if !val
+            if repair
+                val, new_solution = repair_op(new_solution, problem)
+                if !val
+                    continue
+                end
+            else
+                continue
+            end
         end
-        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(swarm[i], problem)
+        s = score_solution(new_solution, problem)
+        if s > score_solution(swarm[i], problem)
             swarm[i] = new_solution
+            if s > best_score
+                best_score = s
+            end
         end
     end
     return (swarm, best_score)
@@ -132,12 +154,23 @@ function LBO(swarm::Swarm, problem::ProblemInstance; repair=false)
             new_student[j] = new_bit
         end
 
-        valid = false
-        if repair && !is_valid(new_student, problem)
-            valid, new_student = repair_op(new_student, problem)
+        val = is_valid(new_student, problem)
+        if !val
+            if repair
+                val, new_student = repair_op(new_student, problem)
+                if !val
+                    continue
+                end
+            else
+                continue
+            end
         end
-        if score_solution(new_student, problem) > student_score && (valid || is_valid(new_student, problem)) && !(new_student in swarm)
+        s = score_solution(new_student, problem)
+        if s > student_score && !(new_student in swarm)
             swarm[student_index] = new_student
+            if s > best_score
+                best_score = s
+            end
         end
     end
 

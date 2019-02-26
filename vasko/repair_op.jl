@@ -37,11 +37,6 @@ function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
             #loop over lower bounds
             for (j, lower_bound) in enumerate(problem.lower_bounds)
                 new_bound_total::Int = lower_values[j]
-                println("")
-                println(infeasibility_total)
-                println(new_bound_total)
-                println(lower_bound[1][i])
-                println(bit)
                 if bit
                     new_bound_total -= lower_bound[1][i]
                 else
@@ -50,12 +45,7 @@ function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
                 if new_bound_total < lower_bound[2]
                     infeasibility_total += lower_bound[2] - new_bound_total
                 end
-                println(new_bound_total)
-                println(lower_bound[2])
-                println(infeasibility_total)
             end
-
-            #readline(stdin)
 
             if infeasibility_total < least_infeasible
                 least_infeasible = infeasibility_total
@@ -79,7 +69,7 @@ function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
 
         if feasible
             solution[best_feasible_bit_index] = !solution[best_feasible_bit_index]
-            @assert is_valid(solution, problem)
+            @assert is_valid(solution, problem) == true
             return (true, solution)
         end
 

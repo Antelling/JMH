@@ -19,15 +19,25 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
     end
 
     for i in 1:length(swarm)
-        solution = swarm[i]
-        new_solution = jaya_perturb(solution, best_solution, worst_solution)
+        new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
 
-        valid = false
-        if repair && !is_valid(new_solution, problem)
-            valid, new_solution = repair_op(new_solution, problem)
+        val = is_valid(new_solution, problem)
+        if !val
+            if repair
+                val, new_solution = repair_op(new_solution, problem)
+                if !val
+                    continue
+                end
+            else
+                continue
+            end
         end
-        if (valid || is_valid(new_solution, problem)) && score_solution(new_solution, problem) > score_solution(solution, problem) && !(new_solution in swarm)
+        s = score_solution(new_solution, problem)
+        if s > score_solution(swarm[i], problem)
             swarm[i] = new_solution
+            if s > best_score
+                best_score = s
+            end
         end
     end
     return (swarm, best_score)
