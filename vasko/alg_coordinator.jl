@@ -16,9 +16,6 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 		for s in swarm
 	        @assert is_valid(s, problem)
 	    end
-		println(alg)
-		println(best_score)
-		println(find_best_score(swarm, problem))
 		@assert best_score == find_best_score(swarm, problem)
         if best_score > prev_best_score
             if verbose >= 1

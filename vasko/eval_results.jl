@@ -12,9 +12,9 @@ for file in readdir(results_dir)
         scores = [b[1] for b in values]
         push!(alg_results, (key, mean(scores), median(times)))
     end
-    sort!(alg_results, by=i->-i[2]/i[3])
+    sort!(alg_results, by=i->-i[2])
     for r in alg_results
-        println("    $(r[1]) scored $(r[2]) in $(r[3]) seconds for a ratio of $(round(r[2]/r[3]))")
+        println("    $(r[1]) scored $(r[2]) in $(r[3]) seconds")
     end
 
     for i in 1:length(results["TBO_med_repair"])
