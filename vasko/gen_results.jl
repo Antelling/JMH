@@ -21,7 +21,7 @@ function main()
 			swarm = random_init(problem, 100, repair=false)
 
 			start_time = time_ns()
-			cur_swarm, best_score = walk_through_algs([jaya, TBO_prob, LBO], deepcopy(swarm), problem, repair=true, repair_op=VSRO, verbose=1)
+			cur_swarm, best_score = walk_through_algs([jaya, TBO, LBO], deepcopy(swarm), problem, repair=true, repair_op=VSRO, verbose=1)
 			end_time = time_ns()
 			elapsed_time = (end_time - start_time)/(10^9)
 	        println("triplicate_prob_repair found max score of $(best_score) in $(elapsed_time) seconds")

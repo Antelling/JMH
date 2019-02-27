@@ -1,5 +1,12 @@
-"""First half of TLBO algorithm. """
-function TBO_prob(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
+"""The TBO algorithm, from the TLBO metaheuristic.
+This was also made discrete by replacing any continous range by a sample of
+integers from that range. However, TBO also has a 'mean of the average learner'
+component. There are two ways to make this component discrete:
+take the median: means[i] > .5
+treat it as a probability: rand() < means[i]
+The method used is controlled by the prob parameter, and defaults to true, since
+the probability method seems to work better in the majority of cases. """
+function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, verbose::Int=0, repair::Bool=false, repair_op::Function)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -8,6 +15,10 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair
         means .+= s
     end
     means ./= n_dimensions
+    if !prob
+        medians::Vector{Bool} = [m > .5 for m in means]
+        #if the median is true, the average is greater than half
+    end
 
     #now we find the best solution
     best_solution::BitList = []
@@ -23,7 +34,11 @@ function TBO_prob(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair
     #now we apply the TBO transformation to each element of the data, and accept the change if the
     #score improves
     for i in 1:length(swarm)
-        new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
+        if prob
+            new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
+        else
+            new_solution = TBO_med_perturb(swarm[i], best_solution, medians)
+        end
 
         val = is_valid(new_solution, problem)
         if !val
@@ -54,60 +69,7 @@ function TBO_prob_perturb(solution::BitList, best_solution::BitList, means::Vect
     return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
 end
 
-"""uses the Vasko and Lu median method instead of my probability method"""
-function TBO_med(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
-    n_dimensions = length(problem.objective)
-
-    #first we need to get the mean for each dimension
-    means::Vector{Float64} = zeros(n_dimensions)
-    for s in swarm
-        means .+= s
-    end
-    means ./= n_dimensions
-    #the if the median is true, the mean will be > .5
-    medians::Vector{Bool} = [m > .5 for m in means]
-
-    #now we find the best solution
-    best_solution::BitList = []
-    best_score = 0
-    for solution in swarm
-        current_score = score_solution(solution, problem)
-        if current_score > best_score
-            best_score = current_score
-            best_solution = solution
-        end
-    end
-
-    #now we apply the TBO transformation to each element of the data, and accept the change if the
-    #score improves
-    for i in 1:length(swarm)
-        new_solution = TBO_med_perturb(swarm[i], best_solution, medians)
-
-        val = is_valid(new_solution, problem)
-        if !val
-            if repair
-                val, new_solution = repair_op(new_solution, problem)
-                if !val
-                    continue
-                end
-            else
-                continue
-            end
-        end
-        s = score_solution(new_solution, problem)
-        if s > score_solution(swarm[i], problem)
-            swarm[i] = new_solution
-            if s > best_score
-                best_score = s
-            end
-        end
-    end
-    return (swarm, best_score)
-end
-
 function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vector{Bool})
-    #this perturb function uses the Vasko/Lu method of making the mean[] discrete: take the median
-    #it's still unreadable but julia always knows what's coming next so it's fast
     return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
