@@ -1,3 +1,10 @@
+"""returns a configured TBO instance"""
+function TBO_monad(;prob::Bool=true, repair::Bool=false, repair_op::Function=Pass)
+    return function(swarm::Swarm, problem::ProblemInstance)
+        return TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op)
+    end
+end
+
 """The TBO algorithm, from the TLBO metaheuristic.
 This was also made discrete by replacing any continous range by a sample of
 integers from that range. However, TBO also has a 'mean of the average learner'
@@ -6,7 +13,7 @@ take the median: means[i] > .5
 treat it as a probability: rand() < means[i]
 The method used is controlled by the prob parameter, and defaults to true, since
 the probability method seems to work better in the majority of cases. """
-function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, verbose::Int=0, repair::Bool=false, repair_op::Function)
+function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bool=false, repair_op::Function=Pass)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -73,7 +80,14 @@ function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vec
     return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
-function LBO(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
+"""returns a configured LBO instance"""
+function LBO_monad(; repair::Bool=false, repair_op::Function=Pass)
+    return function(swarm::Swarm, problem::ProblemInstance)
+        return LBO(swarm, problem, repair=repair, repair_op=repair_op)
+    end
+end
+
+function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass)
     n_dimensions = length(problem.objective)
     best_score = 0
 

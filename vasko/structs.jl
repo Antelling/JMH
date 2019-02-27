@@ -8,3 +8,5 @@ end
 BitList = Vector{Bool}
 
 Swarm = Vector{BitList}
+
+function Pass() end #used when strong typing prevents not having an optional function

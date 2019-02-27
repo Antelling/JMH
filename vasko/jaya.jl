@@ -1,6 +1,13 @@
+"""returns a configured jaya instance"""
+function jaya_monad(; repair::Bool=false, repair_op::Function=Pass)
+    return function(swarm::Swarm, problem::ProblemInstance)
+        return jaya(swarm, problem, repair=repair, repair_op=repair_op)
+    end
+end
+
 """implementation of http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf
 But any continous range was made into a sample of discrete integers on that range."""
-function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
