@@ -1,3 +1,5 @@
+"""Displays statistics about results in results/"""
+
 using JSON
 using Statistics: mean, median
 

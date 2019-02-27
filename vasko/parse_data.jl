@@ -1,5 +1,7 @@
 include("structs.jl")
 
+"""Will load a collection of 90 problems from a passed filename.
+Files must be in the http://people.brunel.ac.uk/~mastjjb/jeb/orlib/mdmkpinfo.html format"""
 function parse_file(filename)
     f = open(filename)
 

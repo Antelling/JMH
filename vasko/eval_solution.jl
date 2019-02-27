@@ -19,8 +19,10 @@ function is_valid(solution::BitList, problem::ProblemInstance)
 end
 
 """returns a numerical value describing how far over the upper bound a solution is. Returns 0 if
-it is a valid solution"""
+it is a valid solution."""
 function violates_upper(solution::BitList, problem::ProblemInstance)
+    #This used to be called by repair_op but now it's smarter and can cache violations.
+    #I keep this function here to use it in the REPL for debugging.
     violation = 0
     for upper_bound in problem.upper_bounds
         total = sum(upper_bound[1] .* solution)
@@ -35,6 +37,8 @@ end
 """returns a numerical value describing how far under the lower bound a solution is. Returns 0 if
 it is a valid solution"""
 function violates_lower(solution::BitList, problem::ProblemInstance)
+    #This used to be called by repair_op but now it's smarter and can cache violations.
+    #I keep this function here to use it in the REPL for debugging. 
     violation = 0
     for lower_bound in problem.lower_bounds
         total = sum(lower_bound[1] .* solution)
