@@ -17,7 +17,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance;
     failed_steps = 0
     prev_best_score = 0
 
-    if verbose >= 1
+    if verbose >= 2
         print("starting search with $(alg) algorithm")
     end
 
@@ -30,20 +30,20 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance;
 			@assert best_score == find_best_score(swarm, problem)
 		end
         if best_score > prev_best_score
-            if verbose >= 1
+            if verbose >= 3
                 println("")
                 print("new best score: $(best_score)")
             end
             failed_steps = 0
             prev_best_score = best_score
         else
-            if verbose >= 1
+            if verbose >= 4
                 print(" ...same result")
             end
             failed_steps += 1
         end
     end
-    if verbose >= 1
+    if verbose >= 2
         println("")
         println("$(n_fails) fails reached, exceeds n_fails, stopping")
     end
@@ -98,7 +98,7 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
                 println("    improvement produced by $(alg), new score is $(current_score)")
             end
             #since this alg worked, we clear out failed_algs
-            failed_algs::Vector{Function} = []
+            failed_algs = [] #this isn't type unstable, it remembers
 			fails = 0
         else
             fails += 1

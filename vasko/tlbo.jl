@@ -1,5 +1,5 @@
 """First half of TLBO algorithm. """
-function TBO_prob(swarm::Swarm, problem::ProblemInstance; repair=false)
+function TBO_prob(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -55,7 +55,7 @@ function TBO_prob_perturb(solution::BitList, best_solution::BitList, means::Vect
 end
 
 """uses the Vasko and Lu median method instead of my probability method"""
-function TBO_med(swarm::Swarm, problem::ProblemInstance; repair=false)
+function TBO_med(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -111,7 +111,7 @@ function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vec
     return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
-function LBO(swarm::Swarm, problem::ProblemInstance; repair=false)
+function LBO(swarm::Swarm, problem::ProblemInstance; verbose::Int=0, repair::Bool=false, repair_op::Function)
     n_dimensions = length(problem.objective)
     best_score = 0
 

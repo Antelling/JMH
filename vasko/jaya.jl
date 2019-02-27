@@ -1,5 +1,5 @@
 """http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf"""
-function jaya(swarm::Swarm, problem::ProblemInstance; repair=false)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []

@@ -90,6 +90,3 @@ function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
     end
     return (false, solution)
 end
-
-
-repair_op = VSRO
