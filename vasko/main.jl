@@ -12,10 +12,12 @@ include("tlbo.jl")
 import JSON
 
 
-function main()
-	for dataset in [1]
+function main(verbose::Int=0)
+	for dataset in 1:9
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
-		ps = "$(problems)"
+		if verbose > 0
+			ps = "$(problems)"
+		end
 	    results = Dict{String,Vector{Tuple{Int,Float64}}}(
 			"jaya_repair"=>[],
 			"TBO_prob_repair"=>[],
@@ -31,74 +33,64 @@ function main()
 			"triplicate_med_no_repair"=>[]
 		)
 
+
 	    for problem in problems
-	        println("")
+			println("")
 	        println("testing problem #$(problem.index)")
 
-			p = "$(problem)"
+			if verbose > 0
+				p = "$(problem)"
+			end
 
 	        swarm = random_init(problem, 100, repair=false)
-	        for alg in [TBO_prob, jaya, TBO_med, LBO]
+
+			for (alg, name) in [
+					(iterate_monad(jaya_monad(repair=false)), "jaya_no_repair"),
+					(iterate_monad(jaya_monad(repair=true, repair_op=VSRO)), "jaya_repair"),
+					(iterate_monad(TBO_monad(repair=false, prob=false)), "TBO_med_no_repair"),
+					(iterate_monad(TBO_monad(repair=false, prob=true)), "TBO_prob_no_repair"),
+					(iterate_monad(TBO_monad(repair=true, prob=false, repair_op=VSRO)), "TBO_med_repair"),
+					(iterate_monad(TBO_monad(repair=true, prob=true, repair_op=VSRO)), "TBO_prob_repair"),
+					(iterate_monad(LBO_monad(repair=false)), "LBO_no_repair"),
+					(iterate_monad(LBO_monad(repair=true, repair_op=VSRO)), "LBO_repair"),
+					(triplicate_monad(
+						[jaya_monad(repair=false),
+						TBO_monad(repair=false, prob=false),
+						LBO_monad(repair=false)]), "triplicate_med_no_repair"),
+					(triplicate_monad(
+						[jaya_monad(repair=false),
+						TBO_monad(repair=false, prob=true),
+						LBO_monad(repair=false)]), "triplicate_prob_no_repair"),
+					(triplicate_monad(
+						[jaya_monad(repair=true, repair_op=VSRO),
+						TBO_monad(repair=true, repair_op=VSRO, prob=false),
+						LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_med_repair"),
+					(triplicate_monad(
+						[jaya_monad(repair=true, repair_op=VSRO),
+						TBO_monad(repair=true, repair_op=VSRO, prob=true),
+						LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_prob_repair"),]
+
 				start_time = time_ns()
-	            _, best_score = iterate_alg(alg, deepcopy(swarm), problem, repair=true)
+	            _, best_score = alg(deepcopy(swarm), problem)
 				end_time = time_ns()
 				elapsed_time = (end_time - start_time)/(10^9)
-	            println("  $(alg)_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	            push!(results["$(alg)_repair"], (best_score, elapsed_time))
-	        end
-
-			start_time = time_ns()
-	        cur_swarm, best_score = walk_through_algs([jaya, TBO_med, LBO], deepcopy(swarm), problem, repair=true, verbose=1)
-			end_time = time_ns()
-			println(best_score)
-			println(find_best_score(cur_swarm, problem))
-			@assert best_score == find_best_score(cur_swarm, problem)
-			elapsed_time = (end_time - start_time)/(10^9)
-	        println("  triplicate_med_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	        push!(results["triplicate_med_repair"], (best_score, elapsed_time))
-
-			start_time = time_ns()
-			cur_swarm, best_score = walk_through_algs([jaya, TBO_prob, LBO], deepcopy(swarm), problem, repair=true, verbose=1)
-			end_time = time_ns()
-			println(best_score)
-			println(find_best_score(cur_swarm, problem))
-			@assert best_score == find_best_score(cur_swarm, problem)
-			elapsed_time = (end_time - start_time)/(10^9)
-	        println("  triplicate_prob_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	        push!(results["triplicate_prob_repair"], (best_score, elapsed_time))
-
-
-			for alg in [jaya, TBO_prob, TBO_med, LBO]
-				start_time = time_ns()
-	            _, best_score = iterate_alg(alg, deepcopy(swarm), problem, repair=false)
-				end_time = time_ns()
-				elapsed_time = (end_time - start_time)/(10^9)
-	            println("  $(alg)_no_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	            push!(results["$(alg)_no_repair"], (best_score, elapsed_time))
-	        end
-
-			start_time = time_ns()
-	        _, best_score = walk_through_algs([jaya, TBO_med, LBO], deepcopy(swarm), problem, repair=false)
-			end_time = time_ns()
-			elapsed_time = (end_time - start_time)/(10^9)
-	        println("  triplicate_med_no_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	        push!(results["triplicate_med_no_repair"], (best_score, elapsed_time))
-
-			start_time = time_ns()
-	        _, best_score = walk_through_algs([jaya, TBO_prob, LBO], deepcopy(swarm), problem, repair=false)
-			end_time = time_ns()
-			elapsed_time = (end_time - start_time)/(10^9)
-	        println("  triplicate_prob_no_repair found max score of $(best_score) in $(elapsed_time) seconds")
-	        push!(results["triplicate_prob_no_repair"], (best_score, elapsed_time))
+	            println("  $name found max score of $(best_score) in $(elapsed_time) seconds")
+	            push!(results[name], (best_score, elapsed_time))
+			end
 
 			open("results/dataset_timed_repair_$(dataset).json", "w") do f
 	        	write(f, JSON.json(results, 4))
 	    	end
 
-			@assert p == "$(problem)"
-	    end
+			if verbose > 0
+				@assert p == "$(problem)"
+			end
 
-		@assert ps == "$(problems)"
+		end
+
+		if verbose > 0
+			@assert ps == "$(problems)"
+		end
 	end
 end
 

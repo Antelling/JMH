@@ -8,11 +8,16 @@ function find_best_score(swarm::Swarm, problem::ProblemInstance)
 	return max(results...)
 end
 
+"""returns a configured iteration instance"""
+function iterate_monad(alg::Function; verbose::Int=0, n_fails::Int=5)
+    return function(swarm::Swarm, problem::ProblemInstance)
+        return iterate_alg(alg, swarm, problem, verbose=verbose, n_fails=5)
+    end
+end
+
 """Will apply the passed algorithm function to the swarm over and over until
-it fails n_fails times in a row. The params repair::Bool and repair_op::Function
-control if repair_op is applied to infeasible solutions."""
-function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance;
-			n_fails::Int=5, verbose=0, repair::Bool=false, repair_op::Function)
+it fails n_fails times in a row."""
+function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fails::Int=5, verbose=0)
 
     failed_steps = 0
     prev_best_score = 0
@@ -22,7 +27,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance;
     end
 
     while failed_steps < n_fails
-        swarm, best_score = alg(swarm, problem, repair=repair, repair_op=repair_op)
+        swarm, best_score = alg(swarm, problem)
 		if verbose > 0 #use verbose as a debug flag
 			for s in swarm
 		        @assert is_valid(s, problem)
@@ -57,10 +62,17 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance;
     return (swarm, prev_best_score)
 end
 
+"""returns a configured triplicate instance"""
+function triplicate_monad(algs::Vector{Function}; verbose::Int=0)
+	return function(swarm::Swarm, problem::ProblemInstance)
+        return walk_through_algs(algs, swarm, problem, verbose=verbose)
+    end
+end
+
 """Randomly walk through the passed list of algorithms.
 A complete cycle with no improvement is needed to stop."""
 function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
-			verbose::Int=0, repair::Bool=false,repair_op::Function)
+			verbose::Int=0)
 	if verbose > 0
     	p = "$(problem)" #this is used as a deepcopy that == still works on
 		#it's slow and hacky but only called while debugging so who cares
@@ -83,7 +95,7 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 			end
 		end
 
-        swarm, current_score = iterate_alg(alg, swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
+        swarm, current_score = iterate_alg(alg, swarm, problem)
 		if verbose > 0
 	        for s in swarm
 	            @assert is_valid(s, problem)
