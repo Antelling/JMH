@@ -17,14 +17,17 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bo
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
-    means = zeros(n_dimensions)
-    for s in swarm
-        means .+= s
-    end
-    means ./= n_dimensions
-    if !prob
-        medians::Vector{Bool} = [m > .5 for m in means]
-        #if the median is true, the average is greater than half
+    if prob
+        means = zeros(n_dimensions)
+        for s in swarm
+            means .+= s
+        end
+        means ./= n_dimensions
+    else
+        #the median is the solution with the median objective value
+        scores = [(s, score_solution(s, problem)) for s in swarm]
+        sort!(scores, by=t->t[2])
+        median = scores[Int(round(length(scores)+.1))][1]
     end
 
     #now we find the best solution
@@ -44,7 +47,7 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bo
         if prob
             new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
         else
-            new_solution = TBO_med_perturb(swarm[i], best_solution, medians)
+            new_solution = TBO_med_perturb(swarm[i], best_solution, median)
         end
 
         val = is_valid(new_solution, problem)

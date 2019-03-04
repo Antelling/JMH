@@ -1,9 +1,9 @@
-#FIXME: make vasko's and benchmark repair 
+#FIXME: make vasko's and benchmark repair
 
 """if we sample with a biased probability, a normal distribution of turned on
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""
-function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, repair=false)
+function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair::Bool=false, repair_op::Function=Pass)
     orig_p = "$(problem)"
     r = get_solution_range(problem)
     v = length(problem.objective)
@@ -49,57 +49,34 @@ function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0, r
     return collect(valid_solutions)
 end
 
+using Random: randperm
 
-"""Add items to a BitList until an upper bound is violated, then remove those items until a valid
-solution is found"""
-function build_remove_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0)
+"""Add items to a knapsack until all dimensional constraints are violated, then """
+function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbose=0)
     n_dimensions = length(problem.objective)
 
     valid_solutions = Set{BitList}()
     while length(valid_solutions) < n_solutions
-        potential_solution::BitList = [false for i in 1:n_dimensions]
-        while violates_upper(potential_solution, problem) == 0
-            i = rand(1:n_dimensions)
-            #this has a chance of flipping true to false, but it doesn't matter
-            potential_solution[i] = !potential_solution[i]
-        end
-    end
-end
-
-
-using Random
-"""FIXME: This doesn't work at all"""
-function recursive_init(problem::ProblemInstance, n_solutions::Int=50; verbose=0)
-    n_dimensions = length(problem.objective)
-
-    valid_solutions = Set{BitList}()
-    while length(valid_solutions) < n_solutions
-        index_list = randperm(n_dimensions)
-        i = 1
-        potential_solution::BitList = [false for i in 1:n_dimensions]
-        while i < n_dimensions
-            potential_solution[index_list[i]] = true
-            if violates_lower(potential_solution, problem) > 0
-                #solution is too small, wait for it to grow
-                if verbose >= 3
-                    print("👿") #there's a little devil emoji here but it doesn't always render
+        order = randperm(n_dimensions)
+        solution::BitList = zeros(Int, n_dimensions)
+        dimensions = zeros(Int, length(problem.upper_bounds))
+        for i in order
+            valid = true
+            for (j, bound) in enumerate(problem.upper_bounds)
+                if dimensions[j] + bound[1][i] > bound[2]
+                    valid = false
                 end
-            elseif violates_upper(potential_solution, problem) > 0
-                #solution is too large, undo the last change
-                potential_solution[index_list[i]] = false
-                if verbose >= 3
-                    print("👿") #there's a little devil emoji here but it doesn't always render
-                end
-            else
-                #solution is valid
-                push!(valid_solutions, potential_solution)
-                if verbose >= 2
-                    print("😄")
-                end
-                break
             end
-            i+= 1
+            if valid
+                for (j, bound) in enumerate(problem.upper_bounds)
+                    dimensions[j] += bound[1][i]
+                end
+                solution[i] = true
+            end
+        end
+        if !violates_demands(solution, problem)
+            push!(valid_solutions, solution)
         end
     end
-    return valid_solutions
+    return collect(valid_solutions)
 end

@@ -5,42 +5,36 @@ include("eval_solution.jl")
 include("eval_problem.jl")
 include("repair_op.jl")
 
-include("alg_coordinator.jl")
-include("jaya.jl")
-include("tlbo.jl")
+function main()
+    problem = parse_file("data/mdmkp_ct1.txt")[3]
 
-function bench_monads(swarm, problem, n)
-    j = jaya_monad(repair=false)
-    l = LBO_monad(repair=false)
-    t = TBO_monad(repair=true, repair_op=VSRO)
-    totals = 0
-    for alg in [j, l, t]
-        for x in 1:n
-            totals += alg(deepcopy(swarm), problem)[2]
-        end
+    swarm1::Swarm = random_init(problem, 1, repair=false)
+    swarm2::Swarm = random_init(problem, 1, repair=true, repair_op=VSRO)
+    swarm3::Swarm = dimensional_focus(problem, 1)
+
+    @time swarm3 = dimensional_focus(problem, 20)
+    @time swarm1 = random_init(problem, 20, repair=false)
+    @time swarm2 = random_init(problem, 20, repair=true, repair_op=VSRO)
+
+
+    for solution in swarm3
+        @assert is_valid(solution, problem)
     end
-    return totals
 end
 
-function bench_direct(swarm, problem, n)
-    totals = 0
-    for x in 1:n
-        totals += jaya(deepcopy(swarm), problem, repair=false)[2]
-    end
-    for x in 1:n
-        totals += LBO(deepcopy(swarm), problem, repair=false)[2]
-    end
-    for x in 1:n
-        totals += TBO(deepcopy(swarm), problem, repair=true, repair_op=VSRO)[2]
-    end
-    return totals
+function bench(n, p)
+    dimensional_focus(p, n)
 end
 
-problem = parse_file("data/mdmkp_ct1.txt")[1]
-swarm = random_init(problem, 100, repair=false)
+function t(n, p)
+    start_time = time_ns()
+    bench(n, p)
+    end_time = time_ns()
+    elapsed_time = (end_time - start_time)/(10^9)
+    println(elapsed_time)
+end
 
-bench_monads(swarm, problem, 1)
-bench_direct(swarm, problem, 1)
+problem = parse_file("data/mdmkp_ct5.txt")[51]
+t(1, problem)
 
-@time bench_monads(swarm, problem, 1000)
-@time bench_direct(swarm, problem, 1000)
+#main()
