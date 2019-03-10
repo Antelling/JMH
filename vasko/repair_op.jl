@@ -1,15 +1,18 @@
 """Vasko's Simple Repair Op"""
 function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
     solution = deepcopy(sol)
+
     #we can assume that because this was called the solution is not feasible
     #we need to get the values for the objective and every bound
     objective_value = sum(problem.objective .* solution)
     upper_values::Vector{Int} = [sum(solution .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(solution .* bound[1]) for bound in problem.lower_bounds]
 
-    fails::Int = 0
-    max_fails::Int = 2
-    while fails < max_fails
+    prev_infeasibility::Int64 = typemax(Int64)
+    cur_infeasibility::Int64 = typemax(Int64)-1
+    while cur_infeasibility < prev_infeasibility
+        prev_infeasibility = cur_infeasibility
+
         least_infeasible::Int = typemax(Int)
         least_inf_bit_i::Int = 0
 
@@ -86,7 +89,8 @@ function VSRO(sol::BitList, problem::ProblemInstance)::Tuple{Bool,BitList}
             lower_values[i] += problem.lower_bounds[i][1][least_inf_bit_i] * plus_or_minus
         end
 
-        fails += 1
+        cur_infeasibility = violates_lower(solution, problem) + violates_upper(solution, problem)
     end
+
     return (false, solution)
 end

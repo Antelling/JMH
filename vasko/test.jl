@@ -5,36 +5,28 @@ include("eval_solution.jl")
 include("eval_problem.jl")
 include("repair_op.jl")
 
-function main()
+function concentrate()
+    problem = ProblemInstance([1, 2, 3, 4, 5],
+     [([11, 22, 33, 44, 55], 76)],
+     [([55, 44, 33, 22, 11], 32)],
+     1)
+
+    swarm3::Swarm = [[true, false, false, false, true]]
+
+    smol_problem = concentrate(swarm3, problem)
+
+    println(smol_problem)
+end
+
+function repair()
     problem = parse_file("data/mdmkp_ct1.txt")[3]
+    random_init(problem, 20, repair=true, repair_op=VSRO)
 
-    swarm1::Swarm = random_init(problem, 1, repair=false)
-    swarm2::Swarm = random_init(problem, 1, repair=true, repair_op=VSRO)
-    swarm3::Swarm = dimensional_focus(problem, 1)
-
-    @time swarm3 = dimensional_focus(problem, 20)
-    @time swarm1 = random_init(problem, 20, repair=false)
-    @time swarm2 = random_init(problem, 20, repair=true, repair_op=VSRO)
-
-
-    for solution in swarm3
-        @assert is_valid(solution, problem)
+    for dataset in 9:-1:1
+        problem = parse_file("data/mdmkp_ct$(dataset).txt")[3]
+        @time random_init(problem, 5, repair=true, repair_op=VSRO)
     end
+
 end
 
-function bench(n, p)
-    dimensional_focus(p, n)
-end
-
-function t(n, p)
-    start_time = time_ns()
-    bench(n, p)
-    end_time = time_ns()
-    elapsed_time = (end_time - start_time)/(10^9)
-    println(elapsed_time)
-end
-
-problem = parse_file("data/mdmkp_ct5.txt")[51]
-t(1, problem)
-
-#main()
+repair()

@@ -52,7 +52,7 @@ end
 using Random: randperm
 
 """Add items to a knapsack until all dimensional constraints are violated, then """
-function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbose=0)
+function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair::Bool=false, repair_op::Function=Pass)
     n_dimensions = length(problem.objective)
 
     valid_solutions = Set{BitList}()
@@ -76,6 +76,11 @@ function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbos
         end
         if !violates_demands(solution, problem)
             push!(valid_solutions, solution)
+        elseif repair
+            v, sol = repair_op(solution, problem)
+            if v
+                push!(valid_solutions, sol)
+            end
         end
     end
     return collect(valid_solutions)
