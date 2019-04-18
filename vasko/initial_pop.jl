@@ -4,7 +4,6 @@
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""
 function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair::Bool=false, repair_op::Function=Pass)
-    orig_p = "$(problem)"
     r = get_solution_range(problem)
     v = length(problem.objective)
     percentage = sum(r)/(2v)
