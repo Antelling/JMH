@@ -13,7 +13,7 @@ import JSON
 
 
 function main(verbose::Int=0)
-	for dataset in 5:9
+	for dataset in [8]
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -42,7 +42,7 @@ function main(verbose::Int=0)
 				p = "$(problem)"
 			end
 
-	        swarm = dimensional_focus(problem, 30)
+	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1)
 			println("  got swarm")
 
 			for (alg, name) in [
