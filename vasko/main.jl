@@ -13,7 +13,7 @@ import JSON
 
 
 function main(verbose::Int=0)
-	for dataset in [8]
+	for dataset in [8,9]
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -79,7 +79,7 @@ function main(verbose::Int=0)
 	            push!(results[name], (best_score, elapsed_time))
 			end
 
-			open("results/dataset_timed_repair_$(dataset).json", "w") do f
+			open("results/AAAAAA_$(dataset).json", "w") do f
 	        	write(f, JSON.json(results, 4))
 	    	end
 

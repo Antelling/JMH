@@ -83,7 +83,7 @@ function weighted_continous_score(params::Vector{<:Real}, dist::Sampleable) #, d
     data = small_cities
 
     samples = Dict{Vector{Vector{Int}},Int}()
-    for x in 1:10000
+    for x in 1:1000
         new_params = params .+ rand(dist, length(params))
         pairs = sort_cities(new_params, data)
         cities = Vector{Vector{Int}}()
@@ -111,7 +111,7 @@ end
 using PyPlot
 function graph()
     data = rand(length(small_cities))
-    a = 300
+    a = 50
     for distribution in [Normal(0, .03)]
         s = 0
         values::Vector{Float64} = []
@@ -129,5 +129,5 @@ end
 
 
 include("../helpers/euc_distance.jl")
-graph()
+#graph()
 #weighted_continous_score(rand(100))

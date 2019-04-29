@@ -69,6 +69,10 @@ function triplicate_monad(algs::Vector{Function}; verbose::Int=0)
     end
 end
 
+function total_score(pop::Swarm, problem::ProblemInstance)
+	return sum([score_solution(sol, problem) for sol in pop])
+end
+
 """Randomly walk through the passed list of algorithms.
 A complete cycle with no improvement is needed to stop."""
 function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
@@ -96,6 +100,10 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 		end
 
         swarm, current_score = iterate_alg(alg, swarm, problem)
+		#current_score is the score of the best solution in the swarm
+		#but we want to look at the swarm as a whole
+		#since a single solution in the swarm will never get worse, we can just:
+		current_score = total_score(swarm, problem)
 		if verbose > 0
 	        for s in swarm
 	            @assert is_valid(s, problem)
@@ -129,5 +137,5 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 		@assert best_score == find_best_score(swarm, problem)
 	    @assert p == "$(problem)"
 	end
-    return (swarm, best_score)
+    return (swarm, find_best_score(swarm, problem))
 end

@@ -167,7 +167,7 @@ function rand_samp_score(params::Vector{<:Real})
         ch += 1
     end
 
-    for x in 1:500
+    for x in 1:300
         sample::typeof(system) = []
         for t in system
             push!(sample, (t[1], t[2] + rand(dist)))
@@ -231,44 +231,21 @@ function main()
         Gaussian(.16, .2, "F")
     ]
 
-    data::Cities = Dict(
-        "A"=>(1, 1),
-        "B"=>(5, 3),
-        "C"=>(7, 1),
-        "D"=>(8, 8),
-        "E"=>(5, 3),
-        "F"=>(7, 7),
-        "G"=>(9, 1),
-        "H"=>(8, 3),
-        "I"=>(5, 9),
-        "J"=>(1, 2),
-        "K"=>(1, 7),
-        "L"=>(5, 2),
-        "M"=>(7, 4),
-        "N"=>(8, 7),
-        "O"=>(5, 3),
-        "P"=>(7, 2),
-        "Q"=>(9, 5),
-        "R"=>(8, 2),
-        "S"=>(5, 4),
-        "T"=>(1, 2),
-    )
-
     disc_data::Vector{Float64} = []
     samp_data::Vector{Float64} = []
 
-    for m in 1:300
+    for m in 1:100
         println(m)
-        system2[1].mean+=1/300
+        system2[1].mean+=1/100
         current_system = copy(system2)
-        tree::Tree = create_probability_tree(current_system)
-        push!(disc_data, score_probability_tree(tree, data))
+        #tree::Tree = create_probability_tree(current_system)
+        #push!(disc_data, score_probability_tree(tree, data))
 
         push!(samp_data, rand_samp_score(map(i->i.mean, current_system)))
     end
 
     #println(graph_data)
-    plot(disc_data)
+    #plot(disc_data)
     plot(samp_data)
     show()
 end
