@@ -1,32 +1,92 @@
-include("libraries/BloomFilter/bloom-filter.jl")
+include("parse_data.jl")
 
-import Base.push!, Base.in
-push!(a::BloomFilter, b) = add!(a, b)
-in(a::BloomFilter, b) = contains(a, b)
+include("initial_pop.jl")
+include("eval_solution.jl")
+include("eval_problem.jl")
+include("repair_op.jl")
 
-function test_insertion(collection, n::Int)
-    for x in 1:n
-        push!(collection, rand(5))
+include("alg_coordinator.jl")
+include("gen_jaya.jl")
+
+function feas_score(solution::BitList, problem::ProblemInstance)
+    #our optimization functions are looking for the highest possible score
+    #so we want feasible solutions to return a positive
+    #and infeasible to return a negative
+    #we will keep track of both feasibility and infeasibility
+    #and return infeasibility if it is non zero, else feasibility
+
+    feasibility = 0
+    infeasibility = -0
+    for upper_bound in problem.upper_bounds
+        violation = sum(upper_bound[1] .* solution) - upper_bound[2]
+        if violation > 0
+            infeasibility -= violation
+        else
+            feasibility += abs(violation^2)
+        end
+    end
+    for lower_bound in problem.lower_bounds
+        violation = lower_bound[2] - sum(lower_bound[1] .* solution)
+        if violation > 0
+            infeasibility -= violation
+        else
+            feasibility += abs(violation^2)
+        end
     end
 
-    return collection
-end
-
-function test_containment(data, n::Int)
-    total = 0
-    for x in 1:n
-        total += in(rand(5), data)
+    if infeasibility == 0
+        return feasibility
+    else
+        return infeasibility
     end
-    return total
 end
 
-for collection in [Set{Vector{Float64}}(), BloomFilter(100000, .005)]
-    println("testing $(collection)")
+function initial_jaya(problem::ProblemInstance, n_sol)::Swarm
+    #for the initial swarm, we steal the probability calculation method from
+    #initial pop
+    r = get_solution_range(problem)
+    v = length(problem.objective)
+    percentage = sum(r)/(2v)
 
-    test_insertion(collection, 100)
-    @time data = test_insertion(collection, 100000)
+    valid_solutions = Set{BitList}()
 
-    test_containment(data, 100)
-    @time collisions = test_containment(data, 10000000)
+    while length(valid_solutions) < n_sol
 
+        possible_solutions = Set{BitList}()
+
+        while length(possible_solutions) < 30
+            push!(possible_solutions, map(i->i<percentage, rand(v)))
+        end
+
+        swarm::Swarm = collect(possible_solutions)
+
+        optimizer::Function = iterate_monad(gen_jaya_monad(repair=false, feasibility_check=(i,j)->true, score=feas_score))
+        new_swarm::Swarm = optimizer(deepcopy(swarm), problem)[1]
+
+        for i in 1:length(swarm)
+            if is_valid(new_swarm[i], problem)
+                push!(valid_solutions, new_swarm[i])
+            end
+        end
+    end
+
+    return collect(valid_solutions)
 end
+
+function bench()
+    easy_problem = parse_file("data/mdmkp_ct1.txt")[1]
+
+    random_init(easy_problem, 20, repair=true, repair_op=VSRO)
+    dimensional_focus(easy_problem, 20, repair=true, repair_op=VSRO)
+    initial_jaya(easy_problem, 20)
+
+    for ds in 1:9
+        println(ds)
+        problem = parse_file("data/mdmkp_ct$(ds).txt")[1]
+        @time random_init(problem, 20, repair=true, repair_op=VSRO)
+        @time dimensional_focus(problem, 20, repair=true, repair_op=VSRO)
+        @time initial_jaya(problem, 20)
+    end
+end
+
+bench()

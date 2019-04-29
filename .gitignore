@@ -1,7 +1,0 @@
-### Julia template
-*.jl.cov
-*.jl.*.cov
-*.jl.mem
-deps/deps.jl
-
-.idea
