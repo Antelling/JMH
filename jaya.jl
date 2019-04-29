@@ -1,13 +1,13 @@
 """returns a configured jaya instance"""
 function jaya_monad(; repair::Bool=false, repair_op::Function=Pass)
-    return function(swarm::Swarm, problem::ProblemInstance)
+    return function jaya_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
         return jaya(swarm, problem, repair=repair, repair_op=repair_op)
     end
 end
 
 """implementation of http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf
 But any continous range was made into a sample of discrete integers on that range."""
-function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
@@ -26,6 +26,11 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair
         end
     end
 
+    if verbose > 3
+        println("best and worse solutions found")
+    end
+
+    println("applying jaya perturb to every element in swarm")
     for i in 1:length(swarm)
         new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
 

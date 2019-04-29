@@ -10,7 +10,7 @@ end
 
 """returns a configured iteration instance"""
 function iterate_monad(alg::Function; verbose::Int=0, n_fails::Int=5)
-    return function(swarm::Swarm, problem::ProblemInstance)
+    return function iter_monad_internal(swarm::Swarm, problem::ProblemInstance)
         return iterate_alg(alg, swarm, problem, verbose=verbose, n_fails=5)
     end
 end
@@ -27,7 +27,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
     end
 
     while failed_steps < n_fails
-        swarm, best_score = alg(swarm, problem)
+        swarm, best_score = alg(swarm, problem, verbose=verbose-1)
 		if verbose > 0 #use verbose as a debug flag
 			for s in swarm
 		        @assert is_valid(s, problem)
@@ -99,7 +99,9 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 			end
 		end
 
-        swarm, current_score = iterate_alg(alg, swarm, problem)
+		println("testing algorithm $(alg)")
+
+        swarm, current_score = iterate_alg(alg, swarm, problem, verbose=verbose-1)
 		#current_score is the score of the best solution in the swarm
 		#but we want to look at the swarm as a whole
 		#since a single solution in the swarm will never get worse, we can just:
@@ -108,7 +110,6 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 	        for s in swarm
 	            @assert is_valid(s, problem)
 	        end
-			@assert current_score == find_best_score(swarm, problem)
 			@assert !(alg in failed_algs)
 		end
 
@@ -134,7 +135,6 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 	    for s in swarm
 	        @assert is_valid(s, problem)
 	    end
-		@assert best_score == find_best_score(swarm, problem)
 	    @assert p == "$(problem)"
 	end
     return (swarm, find_best_score(swarm, problem))

@@ -1,7 +1,7 @@
 """returns a configured TBO instance"""
 function TBO_monad(;prob::Bool=true, repair::Bool=false, repair_op::Function=Pass)
-    return function(swarm::Swarm, problem::ProblemInstance)
-        return TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op)
+    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=0)
     end
 end
 
@@ -13,7 +13,7 @@ take the median: means[i] > .5
 treat it as a probability: rand() < means[i]
 The method used is controlled by the prob parameter, and defaults to true, since
 the probability method seems to work better in the majority of cases. """
-function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bool=false, repair_op::Function=Pass)
+function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -30,6 +30,10 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bo
         median = scores[Int(round(length(scores)+.1))][1]
     end
 
+    if verbose > 3
+        println("mean found: $(means)")
+    end
+
     #now we find the best solution
     best_solution::BitList = []
     best_score = 0
@@ -43,6 +47,9 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bo
 
     #now we apply the TBO transformation to each element of the data, and accept the change if the
     #score improves
+    if verbose > 3
+        println("applying TBO transformation to every element of swarm...")
+    end
     for i in 1:length(swarm)
         if prob
             new_solution = TBO_prob_perturb(swarm[i], best_solution, means)
@@ -85,27 +92,24 @@ end
 
 """returns a configured LBO instance"""
 function LBO_monad(; repair::Bool=false, repair_op::Function=Pass)
-    return function(swarm::Swarm, problem::ProblemInstance)
-        return LBO(swarm, problem, repair=repair, repair_op=repair_op)
+    return function LBO_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return LBO(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
     end
 end
 
-function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass)
+function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
     n_dimensions = length(problem.objective)
     best_score = 0
 
-    #the two learners are meant to be randomly selected
-    #but it doesn't say how many times to do that so I'm just going to loop over every s in swarm
-    #FIXME: discuss with Vasko. But it seems to work well
+    if verbose > 3
+        println("applying LBO transformation to every element of swarm...")
+    end
     for i in 1:length(swarm)
-        #println(i)
         first_learner = swarm[i]
 
-        #over time, the swarm will converge to several identical solutions
-        #eventually only one solution will exist
         second_learner_index = rand(1:length(swarm))
         second_learner = swarm[second_learner_index]
-        while second_learner == first_learner
+        while second_learner == first_learner #don't let the learners be the same
             second_learner_index = rand(1:length(swarm))
             second_learner = swarm[second_learner_index]
         end

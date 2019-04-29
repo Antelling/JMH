@@ -13,7 +13,7 @@ import JSON
 
 
 function main(verbose::Int=0)
-	for dataset in [8,9]
+	for dataset in [8]
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -42,7 +42,7 @@ function main(verbose::Int=0)
 				p = "$(problem)"
 			end
 
-	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1)
+	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1, max_attempts=100_000)
 			println("  got swarm")
 
 			for (alg, name) in [
@@ -69,10 +69,16 @@ function main(verbose::Int=0)
 					(triplicate_monad(
 						[jaya_monad(repair=true, repair_op=VSRO),
 						TBO_monad(repair=true, repair_op=VSRO, prob=true),
-						LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_prob_repair"),]
+						LBO_monad(repair=true, repair_op=VSRO)], verbose=10), "triplicate_prob_repair"),]
 
 				start_time = time_ns()
-	            _, best_score = alg(deepcopy(swarm), problem)
+				if length(swarm) > 2
+	            	_, best_score = alg(deepcopy(swarm), problem)
+				elseif length(swarm) > 0
+					best_score = find_best_score(swarm, problem)
+				else
+					best_score = 0
+				end
 				end_time = time_ns()
 				elapsed_time = (end_time - start_time)/(10^9)
 	            println("  $name found max score of $(best_score) in $(elapsed_time) seconds")
