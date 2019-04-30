@@ -3,6 +3,7 @@ include("parse_data.jl")
 include("initial_pop.jl")
 include("eval_solution.jl")
 include("eval_problem.jl")
+include("eval_swarm.jl")
 include("repair_op.jl")
 
 include("alg_coordinator.jl")
@@ -10,10 +11,11 @@ include("jaya.jl")
 include("tlbo.jl")
 
 import JSON
+using Random
 
 
 function main(verbose::Int=0)
-	for dataset in [8]
+	for dataset in [5]
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -34,7 +36,7 @@ function main(verbose::Int=0)
 		)
 
 
-	    for problem in problems
+	    for problem in problems #Random.shuffle(problems)
 			println("")
 	        println("testing problem #$(problem.index)")
 
@@ -43,6 +45,7 @@ function main(verbose::Int=0)
 			end
 
 	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1, max_attempts=100_000)
+			assert_no_duplicates(swarm)
 			println("  got swarm")
 
 			for (alg, name) in [
@@ -69,7 +72,7 @@ function main(verbose::Int=0)
 					(triplicate_monad(
 						[jaya_monad(repair=true, repair_op=VSRO),
 						TBO_monad(repair=true, repair_op=VSRO, prob=true),
-						LBO_monad(repair=true, repair_op=VSRO)], verbose=10), "triplicate_prob_repair"),]
+						LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_prob_repair"),]
 
 				start_time = time_ns()
 				if length(swarm) > 2

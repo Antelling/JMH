@@ -69,7 +69,7 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bo
             end
         end
         s = score_solution(new_solution, problem)
-        if s > score_solution(swarm[i], problem)
+        if s > score_solution(swarm[i], problem) && !(new_solution in swarm)
             swarm[i] = new_solution
             if s > best_score
                 best_score = s
@@ -97,21 +97,26 @@ function LBO_monad(; repair::Bool=false, repair_op::Function=Pass)
     end
 end
 
+
 function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
+    assert_no_duplicates(swarm)
     n_dimensions = length(problem.objective)
+    swarm_len = length(swarm)
     best_score = 0
 
     if verbose > 3
         println("applying LBO transformation to every element of swarm...")
     end
-    for i in 1:length(swarm)
+    for i in 1:swarm_len
+        if verbose > 4 println("swarm item $(i) of $(swarm_len)") end
         first_learner = swarm[i]
 
-        second_learner_index = rand(1:length(swarm))
+        second_learner_index = rand(deleteat!(collect(1:swarm_len), i))
         second_learner = swarm[second_learner_index]
-        while second_learner == first_learner #don't let the learners be the same
-            second_learner_index = rand(1:length(swarm))
-            second_learner = swarm[second_learner_index]
+
+        if verbose > 4
+            println("different learners selected: $(i) and $(second_learner_index)")
+            @assert first_learner != second_learner
         end
 
         first_learner_score = score_solution(first_learner, problem)
@@ -130,6 +135,8 @@ function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_
             student_index = i
             student_score = first_learner_score
         end
+
+        if verbose > 4 println("applying bit transformations...") end
 
         new_student = copy(student)
         for j in 1:n_dimensions
