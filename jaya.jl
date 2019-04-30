@@ -29,8 +29,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair
     if verbose > 3
         println("best and worse solutions found")
     end
-
-    println("applying jaya perturb to every element in swarm")
+    
     for i in 1:length(swarm)
         new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
 
@@ -46,7 +45,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair
             end
         end
         s = score_solution(new_solution, problem)
-        if s > score_solution(swarm[i], problem)
+        if s > score_solution(swarm[i], problem) && !(new_solution in swarm)
             swarm[i] = new_solution
             if s > best_score
                 best_score = s

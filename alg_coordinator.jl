@@ -24,15 +24,18 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 
     if verbose >= 2
         print("starting search with $(alg) algorithm")
+		assert_no_duplicates(swarm)
     end
 
     while failed_steps < n_fails
+		assert_no_duplicates(swarm)
         swarm, best_score = alg(swarm, problem, verbose=verbose-1)
 		if verbose > 0 #use verbose as a debug flag
 			for s in swarm
 		        @assert is_valid(s, problem)
 		    end
 			@assert best_score == find_best_score(swarm, problem)
+			assert_no_duplicates(swarm)
 		end
         if best_score > prev_best_score
             if verbose >= 3
@@ -98,8 +101,6 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 				break
 			end
 		end
-
-		println("testing algorithm $(alg)")
 
         swarm, current_score = iterate_alg(alg, swarm, problem, verbose=verbose-1)
 		#current_score is the score of the best solution in the swarm
