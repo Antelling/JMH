@@ -14,8 +14,8 @@ import JSON
 using Random
 
 
-function main(verbose::Int=0)
-	for dataset in [5]
+function main(;verbose::Int=0)
+	for dataset in [8]
 	    problems = parse_file("data/mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -36,7 +36,7 @@ function main(verbose::Int=0)
 		)
 
 
-	    for problem in problems #Random.shuffle(problems)
+	    for problem in [problems[30]] #Random.shuffle(problems)
 			println("")
 	        println("testing problem #$(problem.index)")
 
@@ -49,26 +49,26 @@ function main(verbose::Int=0)
 			println("  got swarm")
 
 			for (alg, name) in [
-					(iterate_monad(jaya_monad(repair=false)), "jaya_no_repair"),
-					(iterate_monad(jaya_monad(repair=true, repair_op=VSRO)), "jaya_repair"),
-					(iterate_monad(TBO_monad(repair=false, prob=false)), "TBO_med_no_repair"),
-					(iterate_monad(TBO_monad(repair=false, prob=true)), "TBO_prob_no_repair"),
-					(iterate_monad(TBO_monad(repair=true, prob=false, repair_op=VSRO)), "TBO_med_repair"),
-					(iterate_monad(TBO_monad(repair=true, prob=true, repair_op=VSRO)), "TBO_prob_repair"),
-					(iterate_monad(LBO_monad(repair=false)), "LBO_no_repair"),
-					(iterate_monad(LBO_monad(repair=true, repair_op=VSRO)), "LBO_repair"),
-					(triplicate_monad(
-						[jaya_monad(repair=false),
-						TBO_monad(repair=false, prob=false),
-						LBO_monad(repair=false)]), "triplicate_med_no_repair"),
-					(triplicate_monad(
-						[jaya_monad(repair=false),
-						TBO_monad(repair=false, prob=true),
-						LBO_monad(repair=false)]), "triplicate_prob_no_repair"),
-					(triplicate_monad(
-						[jaya_monad(repair=true, repair_op=VSRO),
-						TBO_monad(repair=true, repair_op=VSRO, prob=false),
-						LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_med_repair"),
+					#(iterate_monad(jaya_monad(repair=false)), "jaya_no_repair"),
+					#(iterate_monad(jaya_monad(repair=true, repair_op=VSRO)), "jaya_repair"),
+					#(iterate_monad(TBO_monad(repair=false, prob=false)), "TBO_med_no_repair"),
+					#(iterate_monad(TBO_monad(repair=false, prob=true)), "TBO_prob_no_repair"),
+					#(iterate_monad(TBO_monad(repair=true, prob=false, repair_op=VSRO)), "TBO_med_repair"),
+					#(iterate_monad(TBO_monad(repair=true, prob=true, repair_op=VSRO)), "TBO_prob_repair"),
+					#(iterate_monad(LBO_monad(repair=false)), "LBO_no_repair"),
+					#(iterate_monad(LBO_monad(repair=true, repair_op=VSRO)), "LBO_repair"),
+					#(triplicate_monad(
+				#		[jaya_monad(repair=false),
+			#			TBO_monad(repair=false, prob=false),
+			#			LBO_monad(repair=false)]), "triplicate_med_no_repair"),
+			#		(triplicate_monad(
+			#			[jaya_monad(repair=false),
+			#			TBO_monad(repair=false, prob=true),
+			#			LBO_monad(repair=false)]), "triplicate_prob_no_repair"),
+			#		(triplicate_monad(
+			#			[jaya_monad(repair=true, repair_op=VSRO),
+			#			TBO_monad(repair=true, repair_op=VSRO, prob=false),
+			#			LBO_monad(repair=true, repair_op=VSRO)]), "triplicate_med_repair"),
 					(triplicate_monad(
 						[jaya_monad(repair=true, repair_op=VSRO),
 						TBO_monad(repair=true, repair_op=VSRO, prob=true),
@@ -76,21 +76,23 @@ function main(verbose::Int=0)
 
 				start_time = time_ns()
 				if length(swarm) > 2
-	            	_, best_score = alg(deepcopy(swarm), problem)
+	            	_, best_score = alg(swarm, problem)
 				elseif length(swarm) > 0
 					best_score = find_best_score(swarm, problem)
 				else
 					best_score = 0
 				end
+
 				end_time = time_ns()
 				elapsed_time = (end_time - start_time)/(10^9)
 	            println("  $name found max score of $(best_score) in $(elapsed_time) seconds")
+				println(find_best_solution(swarm, problem))
 	            push!(results[name], (best_score, elapsed_time))
 			end
 
-			open("results/AAAAAA_$(dataset).json", "w") do f
-	        	write(f, JSON.json(results, 4))
-	    	end
+			#open("results/bbbbb_$(dataset).json", "w") do f
+	       # 	write(f, JSON.json(results, 4))
+	    #	end
 
 			if verbose > 0
 				@assert p == "$(problem)"
@@ -104,4 +106,4 @@ function main(verbose::Int=0)
 	end
 end
 
-main()
+main(verbose=1)
