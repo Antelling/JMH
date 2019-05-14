@@ -17,3 +17,14 @@ function find_best_solution(swarm::Swarm, problem::ProblemInstance)
     end
     return best_solution
 end
+
+import Distances
+"""calculate the distance matrix from the provided metric. Then, for every point, take its least n distances and add them to a total. Return the total."""
+function diversity_metric(swarm::Swarm; metric::Distances.PreMetric=Distances.Euclidean(), n::Int=3)
+    matrix::Array{Int, 2} = reduce(hcat, swarm)
+    R = Distances.pairwise(metric, matrix, matrix, dims=2)
+    rows::Vector{Vector{Float64}} = collect(eachrow(R))
+    map(sort!, rows)
+    rows = [row[2:2+n-1] for row in rows]
+    return sum(sum(rows))/(n*length(swarm))
+end

@@ -59,3 +59,14 @@ function violates_demands(solution::BitList, problem::ProblemInstance)::Bool
     end
     return false
 end
+
+"""determines if solution violates one of the lower bounds"""
+function violates_dimensions(solution::BitList, problem::ProblemInstance)::Bool
+    for upper_bound in problem.upper_bounds
+        total = sum(upper_bound[1] .* solution)
+        if total > upper_bound[2]
+            return true
+        end
+    end
+    return false
+end

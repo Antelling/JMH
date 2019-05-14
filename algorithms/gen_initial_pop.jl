@@ -55,10 +55,12 @@ function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbos
     n_dimensions = length(problem.objective)
 
     valid_solutions = Set{BitList}()
-    failed_attempts = 0
-    while length(valid_solutions) < n_solutions && failed_attempts < max_attempts
-        failed_attempts+=1
+    attempts = 0
+    while length(valid_solutions) < n_solutions && attempts < max_attempts
+        attempts+=1
+
         order = randperm(n_dimensions)
+
         solution::BitList = zeros(Int, n_dimensions)
         dimensions = zeros(Int, length(problem.upper_bounds))
         for i in order
@@ -75,20 +77,46 @@ function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbos
                 solution[i] = true
             end
         end
-        if !violates_demands(solution, problem)
-            push!(valid_solutions, solution)
+        generated_check(violates_demands, solution, valid_solutions, problem, repair, repair_op, verbose)
+
+        if length(valid_solutions) == n_solutions
+            break
+        end
+
+        demand_solution::BitList = ones(Int, n_dimensions)
+        dimensions = [sum(bound[1]) for bound in problem.lower_bounds]
+        for i in order
+            valid = true
+            for (j, bound) in enumerate(problem.lower_bounds)
+                if dimensions[j] - bound[1][i] < bound[2]
+                    valid = false
+                end
+            end
+            if valid
+                for (j, bound) in enumerate(problem.lower_bounds)
+                    dimensions[j] -= bound[1][i]
+                end
+                demand_solution[i] = false
+            end
+        end
+        generated_check(violates_dimensions, demand_solution, valid_solutions, problem, repair, repair_op, verbose)
+    end
+    return collect(valid_solutions)
+end
+
+function generated_check(check_function::Function, solution::BitList, valid_solutions::Set{BitList}, problem::ProblemInstance, repair::Bool, repair_op::Function, verbose::Int)
+    if !check_function(solution, problem)
+        push!(valid_solutions, solution)
+        if verbose > 0
+            print("*")
+        end
+    elseif repair
+        v, sol = repair_op(solution, problem)
+        if v
+            push!(valid_solutions, sol)
             if verbose > 0
                 print("*")
             end
-        elseif repair
-            v, sol = repair_op(solution, problem)
-            if v
-                push!(valid_solutions, sol)
-                if verbose > 0
-                    print("*")
-                end
-            end
         end
     end
-    return collect(valid_solutions)
 end

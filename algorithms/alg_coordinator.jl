@@ -11,7 +11,7 @@ end
 """returns a configured iteration instance"""
 function iterate_monad(alg::Function; verbose::Int=0, n_fails::Int=5)
     return function iter_monad_internal(swarm::Swarm, problem::ProblemInstance)
-        return iterate_alg(alg, swarm, problem, verbose=verbose, n_fails=5)
+        return iterate_alg(alg, swarm, problem, verbose=verbose, n_fails=n_fails)
     end
 end
 
@@ -28,8 +28,15 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
     end
 
     while failed_steps < n_fails
+		if verbose >= 2
+			print("$(failed_steps) ")
+		end
 		assert_no_duplicates(swarm)
         swarm, best_score = alg(swarm, problem, verbose=verbose-1)
+
+		best_score = total_score(swarm, problem) #we look at the swarm as a whole, instead of
+ 		#just the single best solution
+
 		if verbose > 0 #use verbose as a debug flag
 			for s in swarm
 		        @assert is_valid(s, problem)
@@ -62,13 +69,13 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 	    end
 		@assert prev_best_score == find_best_score(swarm, problem)
 	end
-    return (swarm, prev_best_score)
+    return (swarm, find_best_score(swarm, problem))
 end
 
 """returns a configured triplicate instance"""
-function triplicate_monad(algs::Vector{Function}; verbose::Int=0)
+function triplicate_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5)
 	return function(swarm::Swarm, problem::ProblemInstance)
-        return walk_through_algs(algs, swarm, problem, verbose=verbose)
+        return walk_through_algs(algs, swarm, problem, verbose=verbose, n_fails=n_fails)
     end
 end
 
@@ -79,7 +86,7 @@ end
 """Randomly walk through the passed list of algorithms.
 A complete cycle with no improvement is needed to stop."""
 function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
-			verbose::Int=0)
+			verbose::Int=0, n_fails::Int=5)
 	if verbose > 0
     	p = "$(problem)" #this is used as a deepcopy that == still works on
 		#it's slow and hacky but only called while debugging so who cares
@@ -102,7 +109,7 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 			end
 		end
 
-        swarm, current_score = iterate_alg(alg, swarm, problem, verbose=verbose-1)
+        swarm, current_score = iterate_alg(alg, swarm, problem, verbose=verbose-1, n_fails=n_fails)
 		#current_score is the score of the best solution in the swarm
 		#but we want to look at the swarm as a whole
 		#since a single solution in the swarm will never get worse, we can just:
@@ -139,4 +146,32 @@ function walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::Proble
 	    @assert p == "$(problem)"
 	end
     return (swarm, find_best_score(swarm, problem))
+end
+
+function ordered_walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
+			verbose::Int=0, n_fails::Int=5)
+	for alg in algs
+		swarm, current_score = iterate_alg(alg, swarm, problem, n_fails=n_fails)
+	end
+	return (swarm, find_best_score(swarm, problem))
+end
+
+"""returns a configured ordered walk instance"""
+function ordered_walk_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5)
+	return function ordered_monad(swarm::Swarm, problem::ProblemInstance)
+        return ordered_walk_through_algs(algs, swarm, problem, verbose=verbose, n_fails=n_fails)
+    end
+end
+
+
+"""returns a configured control instance"""
+function control_monad()
+    return function control_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return control(swarm, problem)
+    end
+end
+
+"""control function for micah's statistics"""
+function control(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+	return (swarm, find_best_score(swarm, problem))
 end

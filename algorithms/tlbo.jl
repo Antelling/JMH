@@ -1,7 +1,15 @@
-"""returns a configured TBO instance"""
-function TBO_monad(;prob::Bool=true, repair::Bool=false, repair_op::Function=Pass)
+"""returns a configured TLBO instance"""
+function TLBO_monad(;prob::Bool=true, repair::Bool=true, repair_op::Function=VSRO)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=0)
+        swarm = TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=verbose)[1]
+        return LBO(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
+    end
+end
+
+"""returns a configured TBO instance"""
+function TBO_monad(;prob::Bool=true, repair::Bool=true, repair_op::Function=VSRO)
+    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=verbose)
     end
 end
 
@@ -13,7 +21,7 @@ take the median: means[i] > .5
 treat it as a probability: rand() < means[i]
 The method used is controlled by the prob parameter, and defaults to true, since
 the probability method seems to work better in the majority of cases. """
-function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
+function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, repair::Bool=true, repair_op::Function=VSRO, verbose::Int=0)
     n_dimensions = length(problem.objective)
 
     #first we need to get the mean for each dimension
@@ -91,14 +99,14 @@ function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vec
 end
 
 """returns a configured LBO instance"""
-function LBO_monad(; repair::Bool=false, repair_op::Function=Pass)
+function LBO_monad(; repair::Bool=true, repair_op::Function=VSRO)
     return function LBO_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
         return LBO(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
     end
 end
 
 
-function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
+function LBO(swarm::Swarm, problem::ProblemInstance; repair::Bool=true, repair_op::Function=VSRO, verbose::Int=0)
     assert_no_duplicates(swarm)
     n_dimensions = length(problem.objective)
     swarm_len = length(swarm)

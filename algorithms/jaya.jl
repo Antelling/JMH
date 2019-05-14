@@ -7,7 +7,7 @@ end
 
 """implementation of http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf
 But any continous range was made into a sample of discrete integers on that range."""
-function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=false, repair_op::Function=Pass, verbose::Int=0)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=true, repair_op::Function=VSRO, verbose::Int=0)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
