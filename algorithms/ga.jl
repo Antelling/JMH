@@ -11,7 +11,7 @@ end
 function GA(swarm::Swarm, problem::ProblemInstance;
         repair::Bool=true, repair_op::Function=VSRO,
         verbose::Int=0,
-        n_parents=2, n_generations=n_generations)
+        n_parents::Int=2, n_generations::Int=200)
     n_dimensions = length(swarm[1])
     n_solutions = length(swarm)
 

@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('results.xlsx')
+workbook = xlsxwriter.Workbook('excel_file.xlsx')
 worksheet1 = workbook.add_worksheet()
 worksheet2 = workbook.add_worksheet()
 
@@ -11,12 +11,56 @@ j = 0
 optimals = json.loads(open("beasley_mdmkp_datasets/optimal.json", "r").read())
 
 full_files = [
-    ("1__2019-05-13.json", "1"),
-    ("1_manhattan_diversity__2019-05-13.json", "1"),
-    ("2__2019-05-13.json", "2"),
-    ("4__2019-05-13.json", "4"),
-    ("1_useful_algs_only__2019-05-13.json", "1")
+    ("1_four_hybrids__2019-05-15.json", "1"),
+    ("2_four_hybrids__2019-05-15.json", "2")
 ]
+
+def only_percentages(worksheet, files):
+    i = 0
+    j = 0
+    for file, ds in files:
+        results = json.loads(open("results/" + file, "r").read())
+        worksheet.write(i, j, str(file))
+        i+=1
+        alg_case_results = {}
+        for p in range(6):
+            worksheet.write(i, j, "case " + str(1+p))
+            mask = list(range(p, 90, 6))
+            opts = [optimals[ds][m] for m in mask]
+            for alg in results:
+                worksheet.write(i+1, j, str(alg))
+                data = [results[alg][m] for m in mask]
+
+                percentages = []
+                for k in range(len(data)):
+                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k][0])/opts[k])
+                    worksheet.write(i+2+k, j, percent)
+                    percentages.append(percent)
+                worksheet.write(i+2+len(data)+1, j, mean(percentages))
+                if not alg in alg_case_results:
+                    alg_case_results[alg] = []
+                alg_case_results[alg].append(mean(percentages))
+                j+= 1
+            j += 1
+
+        i += 22
+        j = 0
+
+        sortable = []
+        for (key, val) in alg_case_results.items():
+            sortable.append((key, val))
+        sortable.sort(key=lambda x: mean(x[1]))
+
+        for case in range(1, 7):
+            worksheet.write(i-1, j+case, "case " + str(case))
+        worksheet.write(i-1, j+7, "average")
+        for (alg, results) in sortable:
+            worksheet.write(i, j, alg)
+            for (k, result) in enumerate(results):
+                worksheet.write(i, j+k+1, result)
+            worksheet.write(i, j+7, mean(results))
+            i+= 1
+        i+= 5
 
 def wrong_results(worksheet, files):
     i = 0
@@ -31,28 +75,28 @@ def wrong_results(worksheet, files):
             opts = [optimals[ds][m] for m in mask]
             for k in range(len(opts)):
                 worksheet.write(i+2+k, j, opts[k])
-            worksheet.write(i+1, j, "CNET scores")
+            worksheet.write(i+1, j, "CPLEX scores")
             worksheet.write(i+1, j+1, "1st best found score")
             worksheet.write(i+1, j+2, "1st best bitstring")
             worksheet.write(i+1, j+3, "2nd best found score")
             worksheet.write(i+1, j+4, "2nd best bitstring")
             worksheet.write(i+1, j+5, "3rd best found score")
             worksheet.write(i+1, j+6, "3rd best bitstring")
-            worksheet.write(i+1, j+7, "4th best found score")
-            worksheet.write(i+1, j+8, "4th best bitstring")
+            # worksheet.write(i+1, j+7, "4th best found score")
+            # worksheet.write(i+1, j+8, "4th best bitstring")
             for (k, m) in enumerate(mask):
                 scores = []
                 for alg in results:
                     scores.append((results[alg][m][0], results[alg][m][3]))
-                scores.sort(key=lambda i: i[0])
+                scores.sort(key=lambda i: -i[0])
                 worksheet.write(i+2+k, j+1, scores[0][0])
                 worksheet.write(i+2+k, j+2, scores[0][1])
                 worksheet.write(i+2+k, j+3, scores[1][0])
                 worksheet.write(i+2+k, j+4, scores[1][1])
                 worksheet.write(i+2+k, j+5, scores[2][0])
                 worksheet.write(i+2+k, j+6, scores[2][1])
-                worksheet.write(i+2+k, j+7, scores[3][0])
-                worksheet.write(i+2+k, j+8, scores[3][1])
+                # worksheet.write(i+2+k, j+7, scores[3][0])
+                # worksheet.write(i+2+k, j+8, scores[3][1])
             i += 18
         j += 10
 
@@ -107,8 +151,8 @@ def full_results(worksheet, files):
         j = 0
 
 
-wrong_results(worksheet1, [("7_useful_algs_only__2019-05-14.json", "7")])
-full_results(worksheet2, full_files)
+#wrong_results(worksheet2, [("7_eval_missing__2019-05-15.json", "7")])
+only_percentages(worksheet1, full_files)
 
 
 workbook.close()

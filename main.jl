@@ -5,6 +5,7 @@ include("framework/solution_validity.jl")
 include("framework/swarm_properties.jl")
 
 include("algorithms/repair_op.jl")
+include("algorithms/hybrids.jl")
 include("algorithms/gen_initial_pop.jl")
 include("algorithms/alg_coordinator.jl")
 include("algorithms/jaya.jl")
@@ -19,7 +20,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = "results/"
 
 function main(;verbose::Int=0)
-	for dataset in [5]
+	for dataset in 8:9
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -28,18 +29,22 @@ function main(;verbose::Int=0)
 		algorithms = [
 				(control_monad(), "control"),
 				(ordered_walk_monad(
-					[TBO_monad(), jaya_monad(), LBO_monad()], n_fails=n_fails), "tjl"),
+					[TBO_monad(), LBO_monad(), GA_monad(), jaya_monad()], n_fails=n_fails), "TLGJ_pogo"),
 				(ordered_walk_monad(
-					[LBO_monad(), jaya_monad(), TBO_monad()], n_fails=n_fails), "ljt"),
-				(iterate_monad(jaya_monad(), n_fails=n_fails), "jaya"),
-				(iterate_monad(TBO_monad(), n_fails=n_fails), "TBO"),
-				(iterate_monad(LBO_monad(), n_fails=n_fails), "LBO"),
-				(iterate_monad(TLBO_monad(), n_fails=n_fails), "TLBO"),
-				(iterate_monad(GA_monad(), n_fails=n_fails), "GA"),
-				(triplicate_monad(
-					[jaya_monad(repair=true, repair_op=VSRO),
-					TBO_monad(repair=true, repair_op=VSRO, prob=true),
-					LBO_monad(repair=true, repair_op=VSRO)], n_fails=n_fails), "triplicate"),
+					[GA_monad(), jaya_monad(), TBO_monad(), LBO_monad()], n_fails=n_fails), "GJTL_pogo"),
+				(iterate_monad(TLGJ_monad(), n_fails=n_fails), "TLGJ_skate"),
+				(iterate_monad(GJTL_monad(), n_fails=n_fails), "GJTL_skate"),
+				# (ordered_walk_monad(
+				# 	[LBO_monad(), jaya_monad(), TBO_monad()], n_fails=n_fails), "ljt"),
+				# (iterate_monad(jaya_monad(), n_fails=n_fails), "jaya"),
+				# (iterate_monad(TBO_monad(), n_fails=n_fails), "TBO"),
+				# (iterate_monad(LBO_monad(), n_fails=n_fails), "LBO"),
+				# (iterate_monad(TLBO_monad(), n_fails=n_fails), "TLBO"),
+				# (iterate_monad(GA_monad(), n_fails=n_fails), "GA"),
+				# (triplicate_monad(
+				# 	[jaya_monad(repair=true, repair_op=VSRO),
+				# 	TBO_monad(repair=true, repair_op=VSRO, prob=true),
+				# 	LBO_monad(repair=true, repair_op=VSRO)], n_fails=n_fails), "triplicate"),
 				]
 
 		results = Dict{String,Vector{Tuple{Int,Float64,Float64,String}}}()
@@ -55,7 +60,7 @@ function main(;verbose::Int=0)
 				p = "$(problem)"
 			end
 
-	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1, max_attempts=100_000)
+	        swarm = dimensional_focus(problem, 30, repair=true, repair_op=VSRO, verbose=1, max_attempts=500_000)
 
 			for (alg, name) in algorithms
 
@@ -79,7 +84,7 @@ function main(;verbose::Int=0)
 	            push!(results[name], (best_score, elapsed_time, diversity, best_bitstring))
 			end
 
-			open(results_dir * "$(dataset)_useful_algs_only_dup__$(today()).json", "w") do f
+			open(results_dir * "$(dataset)_four_hybrids__$(today()).json", "w") do f
 	       		write(f, JSON.json(results, 4))
 	    	end
 
