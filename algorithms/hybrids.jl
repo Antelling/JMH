@@ -13,20 +13,20 @@ function ordered_walk_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int
     end
 end
 
-function TLGJ_monad(;prob::Bool=true, repair::Bool=true, repair_op::Function=VSRO)
+function TLGJ_monad(;prob::Bool=true, repair_op::Function=VSRO)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        swarm = TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-        swarm = LBO(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-		swarm = GA(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-		return jaya(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
+        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose)[1]
+        swarm = LBO(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
+		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
+		return jaya(swarm, problem, repair_op=repair_op, verbose=verbose)
     end
 end
 
-function GJTL_monad(;prob::Bool=true, repair::Bool=true, repair_op::Function=VSRO)
+function GJTL_monad(;prob::Bool=true, repair_op::Function=VSRO)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-		swarm = GA(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-		swarm = jaya(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-        swarm = TBO(swarm, problem, prob=prob, repair=repair, repair_op=repair_op, verbose=verbose)[1]
-        return LBO(swarm, problem, repair=repair, repair_op=repair_op, verbose=verbose)
+		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
+		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
+        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose)[1]
+        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose)
     end
 end

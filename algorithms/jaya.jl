@@ -1,13 +1,13 @@
 """returns a configured jaya instance"""
-function jaya_monad(; repair::Bool=false, repair_op::Function=Pass)
+function jaya_monad(; repair_op::Function=VSRO)
     return function jaya_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return jaya(swarm, problem, repair=repair, repair_op=repair_op)
+        return jaya(swarm, problem, repair_op=repair_op)
     end
 end
 
 """implementation of http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf
 But any continous range was made into a sample of discrete integers on that range."""
-function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=true, repair_op::Function=VSRO, verbose::Int=0)
+function jaya(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO, verbose::Int=0)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
@@ -29,18 +29,14 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair::Bool=true, repair_
     if verbose > 3
         println("best and worse solutions found")
     end
-    
+
     for i in 1:length(swarm)
         new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
 
         val = is_valid(new_solution, problem)
         if !val
-            if repair
-                val, new_solution = repair_op(new_solution, problem)
-                if !val
-                    continue
-                end
-            else
+            val, new_solution = repair_op(new_solution, problem)
+            if !val
                 continue
             end
         end

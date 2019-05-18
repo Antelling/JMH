@@ -1,9 +1,9 @@
 using StatsBase: sample
 
 """returns a configured jaya instance"""
-function GA_monad(; repair::Bool=true, repair_op::Function=VSRO, n_parents=2, n_generations=200)
+function GA_monad(; repair_op::Function=VSRO, n_parents=2, n_generations=200)
     return function GA_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return GA(swarm, problem, repair=repair, repair_op=repair_op, n_parents=n_parents, n_generations=n_generations, verbose=verbose)
+        return GA(swarm, problem, repair_op=repair_op, n_parents=n_parents, n_generations=n_generations, verbose=verbose)
     end
 end
 
@@ -28,12 +28,8 @@ function GA(swarm::Swarm, problem::ProblemInstance;
         new_solution::BitList = [rand() < percent for percent in averages]
         val = is_valid(new_solution, problem)
         if !val
-            if repair
-                val, new_solution = repair_op(new_solution, problem)
-                if !val
-                    continue
-                end
-            else
+            val, new_solution = repair_op(new_solution, problem)
+            if !val
                 continue
             end
         end
