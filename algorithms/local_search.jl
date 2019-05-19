@@ -1,14 +1,14 @@
 
 function LS_monad()
     return function LS_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return local_swap(swarm, problem)
+        return swarm_local_swap(swarm, problem)
     end
 end
 
 
-function local_swap(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+function swarm_local_swap(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     for i in 1:length(swarm)
-        new_sol = individual_swap(swarm[i], problem)
+        new_sol = local_swap(swarm[i], problem)
         if !(new_sol in swarm)
             swarm[i] = new_sol
         end
@@ -16,7 +16,17 @@ function local_swap(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     return (swarm, find_best_score(swarm, problem))
 end
 
-function individual_swap(sol::BitList, problem::ProblemInstance)
+function local_swap(sol::BitList, problem::ProblemInstance; verbose::Int=0)
+    prev_sol = sol
+    new_sol = _individual_swap(sol, problem)
+    while prev_sol != new_sol
+        prev_sol = deepcopy(new_sol)
+        new_sol = _individual_swap(new_sol, problem)
+    end
+    return new_sol
+end
+
+function _individual_swap(sol::BitList, problem::ProblemInstance)
     objective_value = sum(problem.objective .* sol)
     upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
@@ -63,14 +73,14 @@ end
 
 function LF_monad()
     return function LF_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return local_flip(swarm, problem)
+        return swarm_local_flip(swarm, problem)
     end
 end
 
 
-function local_flip(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+function swarm_local_flip(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     for i in 1:length(swarm)
-        new_sol = individual_flip(swarm[i], problem)
+        new_sol = local_flip(swarm[i], problem)
         if !(new_sol in swarm)
             swarm[i] = new_sol
         end
@@ -78,7 +88,17 @@ function local_flip(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     return (swarm, find_best_score(swarm, problem))
 end
 
-function individual_flip(sol::BitList, problem::ProblemInstance)
+function local_flip(sol::BitList, problem::ProblemInstance; verbose::Int=0)
+    prev_sol = sol
+    new_sol = _individual_flip(sol, problem)
+    while prev_sol != new_sol
+        prev_sol = deepcopy(new_sol)
+        new_sol = _individual_flip(new_sol, problem)
+    end
+    return new_sol
+end
+
+function _individual_flip(sol::BitList, problem::ProblemInstance)
     objective_value = sum(problem.objective .* sol)
     upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
@@ -120,10 +140,9 @@ function individual_flip(sol::BitList, problem::ProblemInstance)
 end
 
 
-function VND(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+function swarm_VND(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     for i in 1:length(swarm)
-        new_sol = individual_swap(swarm[i], problem)
-        new_sol = individual_flip(new_sol, problem)
+        new_sol = VND(swarm[i], problem)
         if !(new_sol in swarm)
             swarm[i] = new_sol
         end
@@ -131,8 +150,20 @@ function VND(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
     return (swarm, find_best_score(swarm, problem))
 end
 
+function VND(sol::BitList, problem::ProblemInstance; verbose::Int=0)
+    prev_sol = sol
+    new_sol = _individual_flip(sol, problem)
+    new_sol = _individual_swap(sol, problem)
+    while prev_sol != new_sol
+        prev_sol = deepcopy(new_sol)
+        new_sol = _individual_flip(new_sol, problem)
+        new_sol = _individual_swap(new_sol, problem)
+    end
+    return new_sol
+end
+
 function VND_monad()
     return function VND_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return VND(swarm, problem)
+        return swarm_VND(swarm, problem)
     end
 end

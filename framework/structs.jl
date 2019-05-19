@@ -13,3 +13,5 @@ function identity_repair(sol::BitList, problem::ProblemInstance)
     #because repair was called, we know it isn't valid
     return (false, sol)
 end
+
+function identity(x, y) return x end

@@ -67,7 +67,7 @@ function main(;verbose::Int=0)
 				p = "$(problem)"
 			end
 
-	        swarm = dimensional_focus(problem, 30, repair_op=VSRO, verbose=1, max_attempts=500_000)
+	        swarm = greedy_construct(problem, 30, repair_op=VSRO, local_search=VND, verbose=1, max_attempts=500_000)
 
 			for (alg, name) in algorithms
 

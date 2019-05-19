@@ -39,12 +39,16 @@ files_with_broken_optimals = [
 
 solo_files = [
     ("11_solo_metaheuristics__2019-05-18.json", "1"),
-    ("21_solo_metaheuristics__2019-05-18.json", "2")
+    ("21_solo_metaheuristics__2019-05-18.json", "2"),
+    ("31_solo_metaheuristics__2019-05-18.json", "2"),
+    ("41_solo_metaheuristics__2019-05-18.json", "2"),
 ]
 
 ga_test = [
     ("1_GA_parents_test__2019-05-18.json", "1"),
     ("2_GA_parents_test__2019-05-18.json", "2"),
+    ("3_GA_parents_test__2019-05-18.json", "3"),
+    ("4_GA_parents_test__2019-05-18.json", "4"),
 ]
 
 def only_percentages(worksheet, files):

@@ -44,7 +44,8 @@ using Random: randperm
 
 """Add items to a knapsack until all dimensional constraints are violated, then
 see if it is valid. If it is not, optionally repair it."""
-function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair_op::Function=VSRO,
+function greedy_construct(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair_op::Function=VSRO,
+            local_search::Function=identity,
             max_attempts::Int=50_000)
     n_dimensions = length(problem.objective)
 
@@ -71,7 +72,8 @@ function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbos
                 solution[i] = true
             end
         end
-        generated_check(violates_demands, solution, valid_solutions, problem, repair_op, verbose)
+        generated_check(violates_demands, solution, valid_solutions, problem,
+                repair_op, local_search, verbose)
 
         if length(valid_solutions) == n_solutions
             break
@@ -93,21 +95,26 @@ function dimensional_focus(problem::ProblemInstance, n_solutions::Int=50; verbos
                 demand_solution[i] = false
             end
         end
-        generated_check(violates_dimensions, demand_solution, valid_solutions, problem, repair_op, verbose)
+        generated_check(violates_dimensions, demand_solution, valid_solutions, problem,
+                repair_op, local_search, verbose)
     end
     return collect(valid_solutions)
 end
 
-function generated_check(check_function::Function, solution::BitList, valid_solutions::Set{BitList}, problem::ProblemInstance, repair_op::Function, verbose::Int)
+function generated_check(check_function::Function, solution::BitList,
+            valid_solutions::Set{BitList}, problem::ProblemInstance,
+            repair_op::Function,
+            local_search::Function,
+            verbose::Int)
     if !check_function(solution, problem)
-        push!(valid_solutions, solution)
+        push!(valid_solutions, local_search(solution, problem))
         if verbose > 0
             print("*")
         end
     else
         v, sol = repair_op(solution, problem)
         if v
-            push!(valid_solutions, sol)
+            push!(valid_solutions, local_search(sol, problem))
             if verbose > 0
                 print("*")
             end
