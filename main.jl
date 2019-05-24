@@ -21,7 +21,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = "results/"
 
 function main(;verbose::Int=0)
-	for dataset in 1:9
+	for dataset in 5:7
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
@@ -31,20 +31,28 @@ function main(;verbose::Int=0)
 				(control_monad(), "control"),
 				# (ordered_walk_monad(
 				# 	[TBO_monad(), LBO_monad(), GA_monad(), jaya_monad()], n_fails=n_fails), "TLGJ_pogo"),
-				# (ordered_walk_monad(
-				# 	[GA_monad(), jaya_monad(), TBO_monad(), LBO_monad()], n_fails=n_fails), "GJTL_pogo"),
+				(ordered_walk_monad(
+					[
+						GA_monad(local_search=VND),
+						jaya_monad(local_search=VND),
+						GA_monad(local_search=VND, n_parents=4),
+						TBO_monad(local_search=VND),
+						LBO_monad(local_search=VND)
+					], n_fails=n_fails), "G2JG4TL_VND-watershed_pogo"),
 				# (iterate_monad(TLGJ_monad(), n_fails=n_fails), "TLGJ_skate"),
-				# (iterate_monad(GJTL_monad(), n_fails=n_fails), "GJTL_skate"),
+				(iterate_monad(G2JG4TL_monad(local_search=VND), n_fails=n_fails), "G2JG4TL_VND-watershed_skate"),
 				# (ordered_walk_monad(
 				# 	[LBO_monad(), jaya_monad(), TBO_monad()], n_fails=n_fails), "ljt"),
-				(iterate_monad(LS_monad(), n_fails=n_fails), "LS"),
-				(iterate_monad(LF_monad(), n_fails=n_fails), "LF"),
-				(iterate_monad(VND_monad(), n_fails=n_fails), "VND"),
-				(iterate_monad(jaya_monad(), n_fails=n_fails), "jaya"),
-				(iterate_monad(TBO_monad(), n_fails=n_fails), "TBO"),
-				(iterate_monad(LBO_monad(), n_fails=n_fails), "LBO"),
-				(iterate_monad(TLBO_monad(), n_fails=n_fails), "TLBO"),
-				(iterate_monad(GA_monad(n_parents=2), n_fails=n_fails), "GA2"),
+				# (iterate_monad(jaya_monad(local_search=VND), n_fails=n_fails), "jaya_ls"),
+				# (iterate_monad(TBO_monad(local_search=VND), n_fails=n_fails), "TBO_ls"),
+				# (iterate_monad(LBO_monad(local_search=VND), n_fails=n_fails), "LBO_ls"),
+				# (iterate_monad(TLBO_monad(local_search=VND), n_fails=n_fails), "TLBO_ls"),
+				# (iterate_monad(GA_monad(local_search=VND), n_fails=n_fails), "GA2_ls"),
+				# (iterate_monad(jaya_monad(), n_fails=n_fails), "jaya"),
+				# (iterate_monad(TBO_monad(), n_fails=n_fails), "TBO"),
+				# (iterate_monad(LBO_monad(), n_fails=n_fails), "LBO"),
+				# (iterate_monad(TLBO_monad(), n_fails=n_fails), "TLBO"),
+				# (iterate_monad(GA_monad(), n_fails=n_fails), "GA2"),
 				# (iterate_monad(GA_monad(n_parents=3), n_fails=n_fails), "GA3"),
 				# (iterate_monad(GA_monad(n_parents=4), n_fails=n_fails), "GA_4_parents"),
 				# (iterate_monad(GA_monad(n_parents=5), n_fails=n_fails), "GA_5_parents"),
@@ -91,7 +99,7 @@ function main(;verbose::Int=0)
 	            push!(results[name], (best_score, elapsed_time, diversity, best_bitstring))
 			end
 
-			open(results_dir * "$(dataset)_testing__$(today()).json", "w") do f
+			open(results_dir * "$(dataset)_dread_churn_3__$(today()).json", "w") do f
 	       		write(f, JSON.json(results, 4))
 	    	end
 

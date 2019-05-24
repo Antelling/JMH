@@ -22,11 +22,21 @@ function TLGJ_monad(;prob::Bool=true, repair_op::Function=VSRO)
     end
 end
 
-function GJTL_monad(;prob::Bool=true, repair_op::Function=VSRO)
+function GJTL_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
-		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
-        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose)[1]
-        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose)
+		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
+    end
+end
+
+function G2JG4TL_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
+    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, n_parents=2)[1]
+		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, n_parents=4)[1]
+        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
     end
 end

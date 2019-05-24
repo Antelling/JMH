@@ -1,15 +1,18 @@
 using StatsBase: sample
 
 """returns a configured jaya instance"""
-function GA_monad(; repair_op::Function=VSRO, n_parents=2, n_generations=200)
+function GA_monad(; repair_op::Function=VSRO, n_parents=2, n_generations=200, local_search::Function=identity)
     return function GA_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return GA(swarm, problem, repair_op=repair_op, n_parents=n_parents, n_generations=n_generations, verbose=verbose)
+        return GA(swarm, problem, repair_op=repair_op, n_parents=n_parents,
+                n_generations=n_generations, verbose=verbose,
+                local_search=local_search)
     end
 end
 
 """genetic algorithm"""
 function GA(swarm::Swarm, problem::ProblemInstance;
-        repair::Bool=true, repair_op::Function=VSRO,
+        repair_op::Function=VSRO,
+        local_search::Function=identity,
         verbose::Int=0,
         n_parents::Int=2, n_generations::Int=200)
     n_dimensions = length(swarm[1])
@@ -47,6 +50,7 @@ function GA(swarm::Swarm, problem::ProblemInstance;
             end
         end
 
+        new_solution = local_search(new_solution, problem)
         s = score_solution(new_solution, problem)
         if s > lowest_score && !(new_solution in swarm)
             swarm[lowest_p] = new_solution

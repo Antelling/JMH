@@ -19,7 +19,7 @@ i = 0
 j = 0
 optimals = json.loads(open("beasley_mdmkp_datasets/optimal.json", "r").read())
 
-hybrid_files = [
+old_hybrids = [
     ("1_four_hybrids__2019-05-15.json", "1"),
     ("2_four_hybrids__2019-05-15.json", "2"),
     ("3_four_hybrids__2019-05-15.json", "3"),
@@ -31,6 +31,19 @@ hybrid_files = [
     ("9_four_hybrids__2019-05-17.json", "9"),
 ]
 
+hybrid_files = [
+    ("1_dread_churn__2019-05-19.json", "1"),
+    ("2_dread_churn__2019-05-19.json", "2"),
+    ("3_dread_churn__2019-05-21.json", "3"),
+    # ("4_dread_churn__2019-05-21.json", "4"),
+    ("5_dread_churn_3__2019-05-20.json", "5"),
+    # ("6_dread_churn__2019-05-22.json", "6"),
+    # ("6_dread_churn_3__2019-05-22.json", "6"),
+    ("7_dread_churn_2__2019-05-20.json", "7"),
+    ("8_dread_churn_2__2019-05-21.json", "8"),
+    # ("9_dread_churn_2__2019-05-22.json", "9")
+]
+
 files_with_broken_optimals = [
     ("7_four_hybrids__2019-05-16.json", "7"),
     ("8_four_hybrids__2019-05-16.json", "8"),
@@ -38,10 +51,12 @@ files_with_broken_optimals = [
 ]
 
 solo_files = [
-    ("11_solo_metaheuristics__2019-05-18.json", "1"),
-    ("21_solo_metaheuristics__2019-05-18.json", "2"),
-    ("31_solo_metaheuristics__2019-05-18.json", "2"),
-    ("41_solo_metaheuristics__2019-05-18.json", "2"),
+    ("1_testing__2019-05-18.json", "1"),
+    ("2_testing__2019-05-19.json", "2"),
+    ("3_testing__2019-05-21.json", "3"),
+    ("4_testing__2019-05-21.json", "4"),
+    ("5_testing__2019-05-21.json", "5"),
+    # ("6_testing__2019-05-22.json", "6"),
 ]
 
 ga_test = [
@@ -49,12 +64,16 @@ ga_test = [
     ("2_GA_parents_test__2019-05-18.json", "2"),
     ("3_GA_parents_test__2019-05-18.json", "3"),
     ("4_GA_parents_test__2019-05-18.json", "4"),
+    ("5_GA_parents_test__2019-05-18.json", "5"),
+    ("6_GA_parents_test__2019-05-19.json", "6"),
+    # ("7_GA_parents_test__2019-05-19.json", "7"),
 ]
 
 def only_percentages(worksheet, files):
     i = 0
     j = 0
     for file, ds in files:
+        print("making: " + file)
         results = json.loads(open("results/" + file, "r").read())
         worksheet.write(i, j, str(file), title_format)
         i+=1
@@ -105,6 +124,7 @@ def wrong_results(worksheet, files):
     j = 0
 
     for file, ds in files:
+        print("making: " + file)
         results = json.loads(open("results/" + file, "r").read())
         worksheet.write(i, j, str(file), title_format)
         i+=1
@@ -146,6 +166,7 @@ def full_results(worksheet, files):
     i = 0
     j = 0
     for file, ds in files:
+        print("making: " + file)
         results = json.loads(open("results/" + file, "r").read())
         worksheet.write(i, j, str(file), title_format)
         i+=1

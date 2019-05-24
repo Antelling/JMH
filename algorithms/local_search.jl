@@ -32,12 +32,11 @@ function _individual_swap(sol::BitList, problem::ProblemInstance)
     lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
 
     best_found_objective = objective_value
-    best_found_solution::BitList = sol
+    best_found_solution::BitList = deepcopy(sol)
     for i in 1:length(sol)
         if sol[i]
             for j in 1:length(sol)
                 if !sol[j]
-                    if i == j break end
                     valid = true
                     for p in 1:length(problem.upper_bounds)
                         changed_value = upper_values[p] - problem.upper_bounds[p][1][i] + problem.upper_bounds[p][1][j]
@@ -48,7 +47,7 @@ function _individual_swap(sol::BitList, problem::ProblemInstance)
                     end
                     if valid
                         for p in 1:length(problem.lower_bounds)
-                            changed_value = lower_values[p] - problem.lower_bounds[p][1][i] + problem.upper_bounds[p][1][j]
+                            changed_value = lower_values[p] - problem.lower_bounds[p][1][i] + problem.lower_bounds[p][1][j]
                             if changed_value < problem.lower_bounds[p][2]
                                 valid = false
                                 break
@@ -153,7 +152,7 @@ end
 function VND(sol::BitList, problem::ProblemInstance; verbose::Int=0)
     prev_sol = sol
     new_sol = _individual_flip(sol, problem)
-    new_sol = _individual_swap(sol, problem)
+    new_sol = _individual_swap(new_sol, problem)
     while prev_sol != new_sol
         prev_sol = deepcopy(new_sol)
         new_sol = _individual_flip(new_sol, problem)
