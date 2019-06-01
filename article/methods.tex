@@ -1,0 +1,176 @@
+\documentclass[11pt, letterpaper, onecolumn]{article}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{\textbf{Parameterless Metaheuristics for the MDMKP}}
+
+
+\begin{document}
+\maketitle
+
+\section{Goals}
+
+Metaheuristics commonly have a wide array of parameters that must be tuned in order to
+obtain good performace. This task is often time consuming, and can lead to brittle systems
+ill-equiped to handle changing problems. Instead, we focus solely on metaheuristics that
+do not require any parameter tuning. These methods often have the side effect of being
+simple and easy to implement, while still giving competitive results.
+
+\section{Algorithms Used}
+
+\subsection{Jaya}
+
+Jaya is a metaheuristic proposed by Dr.~Rao of the Sardar Vallabhbhai National
+Institute of Technology\cite{jaya}. It was originally developed to work on continous
+problems, but has been modified to work on binary problems.
+
+Given a population $X$, define $best$ as the best performing solution, and $worst$ as the worst performing solution. $r$ randomly selects an element from the set. For every solution $S$ in the population, construct a modified solution according to the following transformation:
+\begin{equation} S' = S + r(\{0, 1\})*(best - S) - r(\{0, 1\})*(worst - S) \end{equation}
+If any element in the solution is greater than 1, set it equal to 1, and if any element is less than 0, set it equal to 0. If the new solution performs better than the old solution, replace it in the population. Continue this process until some termination criteria is met.
+
+\subsection{TLBO }
+
+Teaching-Learning Based Optimization is another metaheuristic developed by Dr.~Rao for continous problems \cite{TLBO}. It is a two phase algorithm: the Teaching phase, and the Learning phase.
+
+\subsubsection{TBO}
+
+The first phase, Teaching Based Optimization, is defined as follows: For every bit index $i$ in a solution $S$, update a new solution according to: 
+\begin{equation}
+S_i' = \Big(S_i + r(\{0, 1\})*\big(best_i - r(\{1, 2\})*average_i\big)\Big) > 0
+\end{equation}
+where $best$ is the best scoring solution in the population, and $average$ is the average of all solutions in the population. 
+
+There are two different methods for calculating the average value. The first is to order the population by objective function values, and then use the middle solution as the median average. However, this has a different intent than the continous method: instead of acting as the centerpoint of the population, it is an effectively randomly chosen midtier solution. 
+
+Instead, the mean is calculated as it would be in the continous space. This will results in a vector of numbers between 0 and 1. This can be converted to a discrete representation by treating the values as a liklihood chance of being turned on, like so: 
+\begin{equation}
+S_i' = \Big(S_i + r(\{0, 1\})*\big(best_i - r(\{1, 2\})*(r([0, 1]) < average_i)\big)\Big) > 0
+\end{equation}
+Notice that the random function $r$ was given a continous range from 0 to 1, not a discrete set. This probability method has been shown to give better results than the median method in testing. 
+
+The TBO transform is used in the same way as the jaya transform: repeatedly apply to every solution in the population, replace the solutions if the new solutions have better objective function scores, and repeat until some termination criteria is met. 
+
+\subsubsection{LBO}
+
+The Learning based phase is more complicated, and acts on pairs of solutions. The procedure is documented in algorithm 1. 
+
+\begin{algorithm}
+\caption{Learning Based Optimization}
+\begin{algorithmic}
+\FOR{$sol_1 \in X$}
+\STATE $sol_2 = rand(X)$
+\WHILE{$sol_1 = sol_2$} 
+\STATE $sol_2 = rand(X)$
+\ENDWHILE
+\STATE{$student, teacher = sort(sol_1, sol_2)$}
+\STATE{$new\_student = copy(student)$}
+\FOR{$i \in 0..length(student)$}
+\STATE $new\_student_i \mathrel{{+}{=}} rand(\{0,1\}) * (teacher_i - new\_student_i)$
+\ENDFOR
+\IF{$score(new\_student) > score(student)$}
+\STATE{$X_{student} = new\_student$}
+\ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+In Rao's implementation, a check to make sure the two selected solutions have different objective values is included. This check is omitted from this implementation, as it is arbitrary, and the uniqueness check is sufficient. 
+
+LBO is another method that is applied over and over until some termination criteria is met. 
+
+LBO and TBO are typically chained together to produce the TLBO algorithm. 
+
+\clearpage 
+\subsection{Genetic Algorithm}
+
+The classic Genetic Algorithm for binary problems is to take two solutions, randomly select a breakpoint, and then construct two new solutions like so:
+\begin{equation}
+new\_solution\_1 = sol\_1[:breakpoint] + sol\_2[breakpoint:]
+\end{equation}
+$$ new\_solution\_2 = sol\_2[:breakpoint] + sol\_1[breakpoint:] $$
+
+This allows for very fast construction of new solutions, but is limited in the amount of novel solutions it can produce. For this implementation of a genetic algorithm, a probability based approach is used. 
+
+The procedure for generating a single new solution is as follows. First, $n$ solutions are selected. Let $M$ be the column-wise mean of the matrix of the selected solutions. The percantage chance of a bit $b$ being turned on in the new solution is given by $M_b$. More than one solution could be generated from a single probability matrix $M$, but this implementation does not do so. 
+
+The Genetic Algorithm is used to generate new solutions, and if the new solution scores better than its worst performing parent, the parent is replaced. This process continues until some termination criteria is met. 
+
+This Genetic Algorithm is not a parameterless method, as the amount of parents must be determined by the user. However, testing on the MDMKP with 2, 3, 4, and 5 parents did show significant and consistent differences between the performance of different numbers of parents. 
+
+\subsection{Variable Neighborhood Descent}
+
+VNS is a local method that acts on only one solution at a time. Neighborhood search works as follows: for a solution $S$, a neighborhood $N$ of related solutions is generated. The best performing solution from this neighborhood is selected, and if it outperforms $S$, $S$ is replaced. If $S$ is not outperformed, stop the search. Variable Neighboorhood Search uses more than one neighborhood. 
+
+For this implementation, two neighborhoods are used. The first is based on the flip transformation: for every bit in the solution, generate a new solution with the bit flipped. The second is based on the swap transformation: for every two unalike bits in the solution, generate a new solution with the bits flipped.  
+
+\subsection{The Repair Operator}
+
+MDMKP problems often have very sparse regions of feasibility within the possible solution space. The repair operator is a function that attempts to move an infeasible solution into the realm of feasibility. This method works as so:  
+
+\begin{algorithm}
+\caption{Repair Operator}
+\begin{algorithmic}
+\STATE prev\_infeas = $\infty$
+\STATE curr\_infeas = $\infty-1$
+\WHILE{cur\_infeas $<$ prev\_infeas}
+\STATE{feasible\_solutions = $\emptyset$}
+\STATE{least\_infeas\_b = -1}
+\FOR{b $\in$ solution}
+\STATE{new\_sol = copy(solution)}
+\STATE{new\_sol$_b$ = !new\_sol$_b$}
+\IF{feasibility(new\_sol) $<$ curr\_infeas}
+\STATE{curr\_infeas = feasibility(new\_sol)}
+\STATE{least\_infeas\_b = b}
+\IF{feasible(new\_sol)}
+\STATE feasible\_solutions += new\_sol
+\ENDIF
+\ENDIF
+\ENDFOR
+\IF{feasible\_solutions}
+\RETURN{best\_scoring(feasible\_solutions)}
+\ENDIF
+\STATE solution$_least\_infeas\_b$ = !solution$_least\_infeas\_b$
+\ENDWHILE
+\RETURN NULL
+\end{algorithmic}
+\end{algorithm}
+
+This a very simple version of the Repair Operator, that has many duplicate operations. In order to be performant in code, it is necessary to cache the infeasibility throughout the algorithm, and update it to account for whatever the currently flipped bit is. 
+
+\section{Generating an Initial Population}
+
+Since the majority of randomly generated solutions for the MDMKP will be infeasible, it can be difficult to generate a viable initial population. The steps to generate a feasible solution are as follows:
+
+\begin{enumerate}
+\item Create a random permutation $I$ of the numbers 1..$n$, where $n$ is the amount of bits in a solution
+\item Create a new solution $S$ with every bit disabled
+\item For every index $i$ in $I$, if enabling $S_i$ will not violate a dimension constraint, enable $S_i$
+\item Once every $i$ in $I$ has been checked, run the repair operator on the generated solution $S$
+\item If S is feasible, add it to the set of feasible solutions
+\item Create a new solution $S$ with every bit enabled
+\item For every $i$ in $I$, if disabling $S_i$ will not violate a demand constraint, disable $S_i$
+\item Once every $i$ in $I$ has been checked, run the repair operator on the generated solution $S$
+\item If S is feasible, add it to the set of feasible solutions
+\end{enumerate}
+
+This procedure is run until the target population size has been reached, or some other termination criteria stops the process. 
+
+\section{Managing Population Diversity}
+
+
+
+\section{Runtime Parameters}
+
+Despite using primarily parameterless algorithms, choices still must be made while computing the results. 
+
+	
+
+                                                     
+
+
+
+\bibliography{methods}
+\bibliographystyle{plain}
+\end{document}

@@ -2,13 +2,8 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('four_hybrids.xlsx')
-worksheet1 = workbook.add_worksheet("Broken Optimals")
-worksheet2 = workbook.add_worksheet("Hybrid Full Results")
-worksheet3 = workbook.add_worksheet("Hybrid Percentage Summary")
-worksheet4 = workbook.add_worksheet("Solo Full Results")
-worksheet5 = workbook.add_worksheet("Solo Percentage Summary")
-worksheet6 = workbook.add_worksheet("GA Percentage Summary")
+workbook = xlsxwriter.Workbook('partial_results.xlsx')
+
 
 negative_format = workbook.add_format({'bg_color': 'green'})
 normal_format = workbook.add_format({})
@@ -18,56 +13,6 @@ title_format = workbook.add_format({'bold': True})
 i = 0
 j = 0
 optimals = json.loads(open("beasley_mdmkp_datasets/optimal.json", "r").read())
-
-old_hybrids = [
-    ("1_four_hybrids__2019-05-15.json", "1"),
-    ("2_four_hybrids__2019-05-15.json", "2"),
-    ("3_four_hybrids__2019-05-15.json", "3"),
-    ("4_four_hybrids__2019-05-15.json", "4"),
-    ("5_four_hybrids__2019-05-15.json", "5"),
-    ("6_four_hybrids__2019-05-16.json", "6"),
-    ("7_four_hybrids__2019-05-16.json", "7"),
-    ("8_four_hybrids__2019-05-16.json", "8"),
-    ("9_four_hybrids__2019-05-17.json", "9"),
-]
-
-hybrid_files = [
-    ("1_dread_churn__2019-05-19.json", "1"),
-    ("2_dread_churn__2019-05-19.json", "2"),
-    ("3_dread_churn__2019-05-21.json", "3"),
-    # ("4_dread_churn__2019-05-21.json", "4"),
-    ("5_dread_churn_3__2019-05-20.json", "5"),
-    # ("6_dread_churn__2019-05-22.json", "6"),
-    # ("6_dread_churn_3__2019-05-22.json", "6"),
-    ("7_dread_churn_2__2019-05-20.json", "7"),
-    ("8_dread_churn_2__2019-05-21.json", "8"),
-    # ("9_dread_churn_2__2019-05-22.json", "9")
-]
-
-files_with_broken_optimals = [
-    ("7_four_hybrids__2019-05-16.json", "7"),
-    ("8_four_hybrids__2019-05-16.json", "8"),
-    ("9_four_hybrids__2019-05-17.json", "9"),
-]
-
-solo_files = [
-    ("1_testing__2019-05-18.json", "1"),
-    ("2_testing__2019-05-19.json", "2"),
-    ("3_testing__2019-05-21.json", "3"),
-    ("4_testing__2019-05-21.json", "4"),
-    ("5_testing__2019-05-21.json", "5"),
-    # ("6_testing__2019-05-22.json", "6"),
-]
-
-ga_test = [
-    ("1_GA_parents_test__2019-05-18.json", "1"),
-    ("2_GA_parents_test__2019-05-18.json", "2"),
-    ("3_GA_parents_test__2019-05-18.json", "3"),
-    ("4_GA_parents_test__2019-05-18.json", "4"),
-    ("5_GA_parents_test__2019-05-18.json", "5"),
-    ("6_GA_parents_test__2019-05-19.json", "6"),
-    # ("7_GA_parents_test__2019-05-19.json", "7"),
-]
 
 def only_percentages(worksheet, files):
     i = 0
@@ -213,12 +158,57 @@ def full_results(worksheet, files):
         i += 18
         j = 0
 
+hybrid_files = [
+    ("hybrid_60s/1_2019-05-26.json", "1"),
+    ("hybrid_60s/2_2019-05-26.json", "2"),
+    ("hybrid_60s/3_2019-05-26.json", "3"),
+    ("hybrid_60s/4_2019-05-26.json", "4"),
+    ("hybrid_60s/5_2019-05-26.json", "5"),
+    ("hybrid_60s/6_2019-05-26.json", "6"),
+    ("hybrid_60s/7_2019-05-27.json", "7"),
+    ("hybrid_60s/8_2019-05-28.json", "8"),
+    ("hybrid_60s/9_2019-05-28.json", "9")
 
-wrong_results(worksheet1, files_with_broken_optimals)
-only_percentages(worksheet3, hybrid_files)
-full_results(worksheet2, hybrid_files)
-full_results(worksheet4, solo_files)
-only_percentages(worksheet5, solo_files)
-only_percentages(worksheet6, ga_test)
+]
+
+solo_10s_files = [
+    ("solo_10s/1_2019-05-25.json", "1"),
+    ("solo_10s/2_2019-05-25.json", "2"),
+    ("solo_10s/3_2019-05-25.json", "3"),
+    ("solo_10s/4_2019-05-25.json", "4"),
+    ("solo_10s/5_2019-05-25.json", "5"),
+    ("solo_10s/6_2019-05-26.json", "6"),
+    ("solo_10s/7_2019-05-26.json", "7"),
+    ("solo_10s/8_2019-05-27.json", "8"),
+    ("solo_10s/9_2019-05-27.json", "9"),
+]
+
+solo_60s_files = [
+    ("solo_60s/1_2019-05-25.json", "1"),
+    ("solo_60s/2_2019-05-25.json", "2"),
+    ("solo_60s/3_2019-05-26.json", "3"),
+    ("solo_60s/4_2019-05-26.json", "4"),
+    ("solo_60s/5_2019-05-26.json", "5"),
+    ("solo_60s/6_2019-05-27.json", "6"),
+    ("solo_60s/7_2019-05-27.json", "7"),
+    ("solo_60s/8_2019-05-28.json", "8"),
+    ("solo_60s/9_2019-05-29.json", "9"),
+]
+
+Brok = workbook.add_worksheet("Wrong Optimals")
+HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
+HybSum = workbook.add_worksheet("Hybrid 60s Summary")
+SolFulRes60 = workbook.add_worksheet("Solo 60s Results")
+SolSum60 = workbook.add_worksheet("Solo 60s Summary")
+SolFulRes10 = workbook.add_worksheet("Solo 10s Results")
+SolSum10 = workbook.add_worksheet("Solo 10s Summary")
+
+wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
+only_percentages(HybSum, hybrid_files)
+full_results(HybFulRes, hybrid_files)
+only_percentages(SolSum10, solo_10s_files)
+full_results(SolFulRes10, solo_10s_files)
+only_percentages(SolSum60, solo_60s_files)
+full_results(SolFulRes60, solo_60s_files)
 
 workbook.close()

@@ -40,3 +40,10 @@ function G2JG4TL_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search:
         return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
     end
 end
+
+function VND_TLBO_monad(;repair_op::Function=VSRO)
+    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+		swarm = VND(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
+		return TLBO(swarm, problem, repair_op=repair_op, verbose=verbose)
+    end
+end

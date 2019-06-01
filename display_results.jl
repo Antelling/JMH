@@ -3,7 +3,7 @@
 using JSON
 using Statistics: mean, median
 
-const results_dir = "results/"
+const results_dir = "results/" * ARGS[1]
 const data_dir = "beasley_mdmkp_datasets/"
 
 optimals = JSON.parse(read(open(data_dir * "optimal.json"), String))
