@@ -21,15 +21,15 @@ const problems_dir = "beasley_mdmkp_datasets/"
 
 using JSON
 
-const name = "G2JG4TL"
+const name = "Control_ds5"
 
 function main(n)
-    dataset = 1
+    dataset = 5
     problem = 3
 
     problem = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")[problem]
     X = greedy_construct(problem, n, repair_op=VSRO, local_search=identity, max_attempts=500_000)
-    X = iterate_monad(G2JG4TL_monad(local_search=identity), n_fails=25, time_limit=60)(X, problem)[1]
+    # X = iterate_monad(TLBO_monad(local_search=identity), n_fails=25, time_limit=60)(X, problem)[1]
     y = [[score_solution(x, problem)] for x in X]
 
     open(name * ".json", "w") do f

@@ -17,12 +17,20 @@ optimals = json.loads(open("beasley_mdmkp_datasets/optimal.json", "r").read())
 def only_percentages(worksheet, files):
     i = 0
     j = 0
+
+    complete_total = {}
+    complete_total["percentages"] = {}
+    complete_total["times"] = {}
+    complete_total["diversities"] = {}
+
     for file, ds in files:
         print("making: " + file)
         results = json.loads(open("results/" + file, "r").read())
         worksheet.write(i, j, str(file), title_format)
         i+=1
-        alg_case_results = {}
+        alg_percentage_results = {}
+        alg_time_results = {}
+        alg_diversity_results = {}
         for p in range(6):
             worksheet.write(i, j, "case " + str(1+p), title_format)
             mask = list(range(p, 90, 6))
@@ -32,37 +40,78 @@ def only_percentages(worksheet, files):
                 data = [results[alg][m] for m in mask]
 
                 percentages = []
+                times = []
+                diversities = []
                 for k in range(len(data)):
                     percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k][0])/opts[k])
                     worksheet.write(i+2+k, j, percent)
                     percentages.append(percent)
+                    times.append(data[k][1])
+                    diversities.append(data[k][2])
                 worksheet.write(i+2+len(data)+1, j, mean(percentages), title_format)
-                if not alg in alg_case_results:
-                    alg_case_results[alg] = []
-                alg_case_results[alg].append(mean(percentages))
+                if not alg in alg_percentage_results:
+                    alg_percentage_results[alg] = []
+                    alg_time_results[alg] = []
+                    alg_diversity_results[alg] = []
+                alg_percentage_results[alg].append(mean(percentages))
+                alg_time_results[alg].append(mean(times))
+                alg_diversity_results[alg].append(mean(diversities))
                 j+= 1
             j += 1
 
         i += 22
         j = 0
 
+        for (name, data) in [("percentages", alg_percentage_results),
+                ("times", alg_time_results), ("diversities", alg_diversity_results)]:
+            sortable = []
+            for (key, val) in data.items():
+                sortable.append((key, val))
+            sortable.sort(key=lambda x: mean(x[1]))
+
+            worksheet.write(i-1, j, name, title_format)
+            for case in range(1, 7):
+                worksheet.write(i-1, j+case, "case " + str(case), title_format)
+            worksheet.write(i-1, j+7, "average", title_format)
+            # worksheet.write(i-1, j+8, "sparkline", title_format)
+            old_i = i
+            for (alg, results) in sortable:
+                worksheet.write(i, j, alg, title_format)
+                for (k, result) in enumerate(results):
+                    worksheet.write(i, j+k+1, result)
+                worksheet.write(i, j+7, mean(results))
+                if not (alg in complete_total[name]):
+                    complete_total[name][alg] = []
+                complete_total[name][alg].append(mean(results))
+                # worksheet.add_sparkline(i, j+8, {'range': 'B' + str(i+1) + ':G' + str(i+1), 'type': 'column'})
+                i+= 1
+            j += 10
+            i = old_i
+        i+= len(alg_time_results.keys())+2
+        j = 0
+
+    i += 2
+    for element in ["percentages", "times", "diversities"]:
         sortable = []
-        for (key, val) in alg_case_results.items():
-            sortable.append((key, val))
+        for alg in complete_total[element]:
+            sortable.append((alg, complete_total[element][alg]))
         sortable.sort(key=lambda x: mean(x[1]))
 
-        for case in range(1, 7):
-            worksheet.write(i-1, j+case, "case " + str(case), title_format)
-        worksheet.write(i-1, j+7, "average", title_format)
-        worksheet.write(i-1, j+8, "sparkline", title_format)
+        worksheet.write(i-1, j, "complete " + element, title_format)
+        for case in range(1, 10):
+            worksheet.write(i-1, j+case, "dataset " + str(case), title_format)
+        worksheet.write(i-1, j+10, "average", title_format)
+        # worksheet.write(i-1, j+8, "sparkline", title_format)
+        old_i = i
         for (alg, results) in sortable:
             worksheet.write(i, j, alg, title_format)
             for (k, result) in enumerate(results):
                 worksheet.write(i, j+k+1, result)
-            worksheet.write(i, j+7, mean(results))
-            worksheet.add_sparkline(i, j+8, {'range': 'B' + str(i+1) + ':G' + str(i+1), 'type': 'column'})
+            worksheet.write(i, j+10, mean(results))
+            # worksheet.add_sparkline(i, j+8, {'range': 'B' + str(i+1) + ':G' + str(i+1), 'type': 'column'})
             i+= 1
-        i+= 5
+        j += 12
+        i = old_i
 
 def wrong_results(worksheet, files):
     i = 0
