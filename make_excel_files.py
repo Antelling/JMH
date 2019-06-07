@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('partial_results.xlsx')
+workbook = xlsxwriter.Workbook('ds4_matrix_limited.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -13,6 +13,11 @@ title_format = workbook.add_format({'bold': True})
 i = 0
 j = 0
 optimals = json.loads(open("beasley_mdmkp_datasets/optimal.json", "r").read())
+
+def parse_swarm(swarm):
+    swarm = json.loads("[" + swarm.replace("(", "[").replace(")", "]") + "]")
+    swarm.reverse()
+    return swarm
 
 def only_percentages(worksheet, files):
     i = 0
@@ -140,7 +145,8 @@ def wrong_results(worksheet, files):
             for (k, m) in enumerate(mask):
                 scores = []
                 for alg in results:
-                    scores.append((results[alg][m][0], results[alg][m][3]))
+                    swarm = parse_swarm(results[alg][m][3])
+                    scores.append((swarm[0][1], swarm[0][0]))
                 scores.sort(key=lambda i: -i[0])
                 worksheet.write(i+2+k, j+1, scores[0][0], negative_format if scores[0][0] > opts[k] else normal_format)
                 worksheet.write(i+2+k, j+2, scores[0][1], bitstring_format)
@@ -207,6 +213,78 @@ def full_results(worksheet, files):
         i += 18
         j = 0
 
+def _manhattan_distance(a, b):
+    total = 0
+    for i in range(len(a)):
+        total += 1 if a[i] != b[i] else 0
+    return total
+
+from scipy.optimize import linear_sum_assignment
+import numpy as np
+def _difference_metric(swarm1, swarm2):
+    matrix = []
+    cost_cache = {} #computing distance takes a while, but we can cache half of it
+    for sol, score in swarm1: #compute the cost matrix
+        distances = []
+        for sol2, score2 in swarm2:
+            if sol2 in cost_cache and sol in cost_cache[sol2]:
+                distance = cost_cache[sol2][sol]
+            else:
+                distance = _manhattan_distance(sol, sol2)
+                if not sol2 in cost_cache:
+                    cost_cache[sol2] = {}
+                if not sol in cost_cache:
+                    cost_cache[sol] = {}
+                cost_cache[sol2][sol] = distance
+                cost_cache[sol][sol2] = distance
+            distances.append(distance)
+        matrix.append(distances)
+
+    matrix = np.array(matrix)
+    row_ind, col_ind = linear_sum_assignment(matrix)
+    total_distance = matrix[row_ind, col_ind].sum()
+    return total_distance
+
+def similarity_matrixes(worksheet, files, hit_list=None):
+    if not hit_list:
+        hit_list = []
+
+    i = 0
+    j = 0
+    for file, ds in files:
+        print("making matrix for: " + file)
+        results = json.loads(open("results/" + file, "r").read())
+        for alg in hit_list:
+            del results[alg]
+
+        worksheet.write(i, j, str(file), title_format)
+        matrix = {}
+        for alg in results:
+            matrix[alg] = {}
+        for alg in results:
+            print("    " + alg)
+            for other_alg in results:
+                print("        " + other_alg, end="")
+                distances = []
+                for p in range(90):
+                    swarm1 = parse_swarm(results[alg][p][3])
+                    swarm2 = parse_swarm(results[other_alg][p][3])
+                    distances.append(_difference_metric(swarm1, swarm2))
+                average_distance = mean(distances)
+                matrix[alg][other_alg] = average_distance
+                matrix[other_alg][alg] = average_distance
+                print("   " + str(average_distance))
+
+        alg_list = list(results.keys()) #ensure consistent order
+        for (k, alg) in enumerate(alg_list): #make the axes
+            worksheet.write(i, j+k+1, alg, title_format)
+            worksheet.write(i+1+k, j, alg, title_format)
+        i+=1
+        j+=1
+        for (k, alg) in enumerate(alg_list): #fill in the matrix
+            for (l, otheralg) in enumerate(alg_list):
+                worksheet.write(i+k, j+l, matrix[alg][otheralg])
+
 hybrid_files = [
     ("hybrid_60s/1_2019-05-26.json", "1"),
     ("hybrid_60s/2_2019-05-26.json", "2"),
@@ -244,20 +322,27 @@ solo_60s_files = [
     ("solo_60s/9_2019-05-29.json", "9"),
 ]
 
-Brok = workbook.add_worksheet("Wrong Optimals")
-HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
-HybSum = workbook.add_worksheet("Hybrid 60s Summary")
-SolFulRes60 = workbook.add_worksheet("Solo 60s Results")
-SolSum60 = workbook.add_worksheet("Solo 60s Summary")
-SolFulRes10 = workbook.add_worksheet("Solo 10s Results")
-SolSum10 = workbook.add_worksheet("Solo 10s Summary")
+alg_hit_list = [
+    "T1", "T5", "T10", "T20", "T30", "LF", "VND", "LS"
+]
 
-wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
-only_percentages(HybSum, hybrid_files)
-full_results(HybFulRes, hybrid_files)
-only_percentages(SolSum10, solo_10s_files)
-full_results(SolFulRes10, solo_10s_files)
-only_percentages(SolSum60, solo_60s_files)
-full_results(SolFulRes60, solo_60s_files)
+# Brok = workbook.add_worksheet("Wrong Optimals")
+# HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
+# HybSum = workbook.add_worksheet("Hybrid 60s Summary")
+# SolFulRes60 = workbook.add_worksheet("Solo 60s Results")
+# SolSum60 = workbook.add_worksheet("Solo 60s Summary")
+# SolFulRes10 = workbook.add_worksheet("Solo 10s Results")
+# SolSum10 = workbook.add_worksheet("Solo 10s Summary")
+
+# wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
+# only_percentages(HybSum, hybrid_files)
+# full_results(HybFulRes, hybrid_files)
+# only_percentages(SolSum10, solo_10s_files)
+# full_results(SolFulRes10, solo_10s_files)
+# only_percentages(SolSum60, solo_60s_files)
+# full_results(SolFulRes60, solo_60s_files)
+
+test = workbook.add_worksheet("test")
+similarity_matrixes(test, [("gigantic_search/4.json", "1")], hit_list=alg_hit_list)
 
 workbook.close()

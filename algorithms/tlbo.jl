@@ -1,15 +1,17 @@
 """returns a configured TLBO instance"""
-function TLBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
+function TLBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity, top_n::Int=1)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
+        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op,
+                verbose=verbose, local_search=local_search, top_n=top_n)[1]
         return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
     end
 end
 
 """returns a configured TBO instance"""
-function TBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
+function TBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity, top_n::Int=1)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)
+        return TBO(swarm, problem, prob=prob, repair_op=repair_op,
+            verbose=verbose, local_search=local_search, top_n=top_n)
     end
 end
 
@@ -21,7 +23,7 @@ take the median: means[i] > .5
 treat it as a probability: rand() < means[i]
 The method used is controlled by the prob parameter, and defaults to true, since
 the probability method seems to work better in the majority of cases. """
-function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true,
+function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, top_n::Int=1,
             repair_op::Function=VSRO, local_search::Function=identity,
             verbose::Int=0)
     n_dimensions = length(problem.objective)
@@ -44,18 +46,14 @@ function TBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true,
         println("mean found: $(means)")
     end
 
-    #now we find the best solution
+    #select a solution from the top n of solutions
     best_solution::BitList = []
     best_score = 0
-    for solution in swarm
-        current_score = score_solution(solution, problem)
-        if current_score > best_score
-            best_score = current_score
-            best_solution = solution
-        end
-    end
+    new_swarm = [(s, score_solution(s, problem)) for s in swarm]
+    sort!(new_swarm, by=x -> x[2])
+    best_solution = rand(new_swarm[1:top_n])[1]
 
-    #now we apply the TBO transformation to each element of the data, and accept the change if the
+    #apply the TBO transformation to each element of the data, and accept the change if the
     #score improves
     if verbose > 3
         println("applying TBO transformation to every element of swarm...")
@@ -90,11 +88,12 @@ function TBO_prob_perturb(solution::BitList, best_solution::BitList, means::Vect
     #this is terrible and unreadable but super fast
     #the rand([1, 2]) is the tf value. Which isn't a parameter just a random number
     #rand() < means[i] is how I made the means[] discrete. It works better than using the median
-    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
+    return [bit + (best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
 end
 
 function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vector{Bool})
-    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
+    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
+    # return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
 """returns a configured LBO instance"""

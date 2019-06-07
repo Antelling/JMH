@@ -29,42 +29,35 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 
 	start_time = time()
     while failed_steps < n_fails && time() - start_time < time_limit
-		try
-			if verbose >= 2
-				print("$(failed_steps) ")
-			end
-			assert_no_duplicates(swarm)
-	        swarm, best_score = alg(swarm, problem, verbose=verbose-1)
-
-			best_score = total_score(swarm, problem) #we look at the swarm as a whole, instead of
-	 		#just the single best solution
-
-			if verbose > 0 #use verbose as a debug flag
-				for s in swarm
-			        @assert is_valid(s, problem)
-			    end
-				@assert best_score == find_best_score(swarm, problem)
-				assert_no_duplicates(swarm)
-			end
-	        if best_score > prev_best_score
-	            if verbose >= 3
-	                println("")
-	                print("new best score: $(best_score)")
-	            end
-	            failed_steps = 0
-	            prev_best_score = best_score
-	        else
-	            if verbose >= 4
-	                print(" ...same result")
-	            end
-	            failed_steps += 1
-	        end
-		catch y
-			if verbose > 0
-				println(y)
-			end
-			failed_steps += 1
+		if verbose >= 2
+			print("$(failed_steps) ")
 		end
+		assert_no_duplicates(swarm)
+        swarm, best_score = alg(swarm, problem, verbose=verbose-1)
+
+		best_score = total_score(swarm, problem) #we look at the swarm as a whole, instead of
+ 		#just the single best solution
+
+		if verbose > 0 #use verbose as a debug flag
+			for s in swarm
+		        @assert is_valid(s, problem)
+		    end
+			@assert best_score == find_best_score(swarm, problem)
+			assert_no_duplicates(swarm)
+		end
+        if best_score > prev_best_score
+            if verbose >= 3
+                println("")
+                print("new best score: $(best_score)")
+            end
+            failed_steps = 0
+            prev_best_score = best_score
+        else
+            if verbose >= 4
+                print(" ...same result")
+            end
+            failed_steps += 1
+        end
     end
     if verbose >= 2
         println("")

@@ -18,7 +18,7 @@
 Metaheuristics commonly have a wide array of parameters that must be tuned in order to
 obtain good performace. This task is often time consuming, and can lead to brittle systems
 ill-equiped to handle changing problems. Instead, we focus solely on metaheuristics that
-do not require any parameter tuning. These methods often have the side effect of being
+do not require any parameter tuning. These methods often have the added effect of being
 simple and easy to implement, while still giving competitive results.
 
 \section{Algorithms Used}
@@ -26,7 +26,8 @@ simple and easy to implement, while still giving competitive results.
 \subsection{Jaya}
 
 Jaya is a metaheuristic proposed by Dr.~Rao of the Sardar Vallabhbhai National
-Institute of Technology\cite{jaya}. It was originally developed to work on continous
+Institute of Technology%\cite{jaya}
+. It was originally developed to work on continous
 problems, but has been modified to work on binary problems.
 
 Given a population $X$, define $best$ as the best performing solution, and $worst$ as the worst performing solution. $r$ randomly selects an element from the set. For every solution $S$ in the population, construct a modified solution according to the following transformation:
@@ -35,7 +36,8 @@ If any element in the solution is greater than 1, set it equal to 1, and if any 
 
 \subsection{TLBO }
 
-Teaching-Learning Based Optimization is another metaheuristic developed by Dr.~Rao for continous problems \cite{TLBO}. It is a two phase algorithm: the Teaching phase, and the Learning phase.
+Teaching-Learning Based Optimization is another metaheuristic developed by Dr.~Rao for continous problems %\cite{TLBO}
+. It is a two phase algorithm: the Teaching phase, and the Learning phase.
 
 \subsubsection{TBO}
 
@@ -47,7 +49,7 @@ where $best$ is the best scoring solution in the population, and $average$ is th
 
 There are two different methods for calculating the average value. The first is to order the population by objective function values, and then use the middle solution as the median average. However, this has a different intent than the continous method: instead of acting as the centerpoint of the population, it is an effectively randomly chosen midtier solution. 
 
-Instead, the mean is calculated as it would be in the continous space. This will results in a vector of numbers between 0 and 1. This can be converted to a discrete representation by treating the values as a liklihood chance of being turned on, like so: 
+Instead, the mean is calculated as it would be in the continous space. This will results in a vector of numbers between 0 and 1. This can be converted to a discrete representation by treating the values as a likelihood chance of being turned on, like so: 
 \begin{equation}
 S_i' = \Big(S_i + r(\{0, 1\})*\big(best_i - r(\{1, 2\})*(r([0, 1]) < average_i)\big)\Big) > 0
 \end{equation}
@@ -223,7 +225,7 @@ The average diversity metrics for the results for the Beasley MDMKP dataset are 
       \end{minipage}}
 \end{table}
 
-Here, the "control" result is VND, and its population is used as the initial population for the other metaheuristics, for reasons that will be later discussed. We therefore see that all the metaheuristics tested are intensification techniques. As population-based metaheuristics rely on creating new solutions from diverse inspiration solutions, a loss of diversity will lead to a loss of effectiveness. It is therefore beneficial to devise a method to limit the progressive diversity loss. 
+Here, the ``control" result is VND, and its population is used as the initial population for the other metaheuristics, for reasons that will be later discussed. We therefore see that all the metaheuristics tested are intensification techniques. As population-based metaheuristics rely on creating new solutions from diverse inspiration solutions, a loss of diversity will lead to a loss of effectiveness. It is therefore beneficial to devise a method to limit the progressive diversity loss. 
 
 There are several methods to limit loss of diversity, such as expanding the solution pool, reintroducing old, poorly performing outlier solutions to the population, or ensuring that any new solution replacing an old solution must be suffiently different to every other solution in the population, which is the strategy used in this implementation. 
 
@@ -254,11 +256,11 @@ Despite using primarily parameterless algorithms, choices still must be made whi
 
 \paragraph{Maximum Failed Attempts}
 
-When testing a metaheuristic, a single run through is often not enough to extract the full benefits of the method. Instead, it is ran over and over, until it fails to produce an improvement for any solution in the swarm $max\_failed\_attempts$ times in a row. This setting will directly impact the run time of the algorithm. In this implementation, a very high value of 25 is used. This can result in algorithms taking up to three hours, but there is an additional time constraint. 
+When testing a metaheuristic, a single run through is often not enough to extract the full benefits of the method. Instead, it is ran repeatedly, until it fails to produce an improvement for any solution in the swarm $max\_failed\_attempts$ times in a row. This setting will directly impact the run time of the algorithm. In this implementation, a high value of 25 is used. This can result in algorithms taking up to three hours, but there is an additional time constraint. 
 
 \paragraph{Time Constraint}
 
-Each algorithm is tested for 10 seconds, and for 60 seconds. Do to the way the time is measured, the true runtime can be up to three seconds over the limit. The Maximum Failed Attempts stop parameter can also cause the runtime to be much less than the allotted time. 
+Each algorithm is tested for 10 seconds, and for 60 seconds. Due to the way the time is measured, the true runtime can be up to three seconds over the limit. The Maximum Failed Attempts stop parameter can also cause the runtime to be much less than the allotted time. 
 
 \paragraph{Use of Helper Function}
 
