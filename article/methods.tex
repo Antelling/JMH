@@ -30,11 +30,19 @@ Institute of Technology%\cite{jaya}
 . It was originally developed to work on continous
 problems, but has been modified to work on binary problems.
 
-Jaya creates a new solution by moving an existing solution towards the best solution found, while simultaneously moving it away from the worst solution found. In the continous space, each movement vector is scaled by some continous value between zero and one. However, as the MDMKP is a binary formulation, there are no fractional movements. Instead, each bit is scaled either 0\% or 100\% of it's distance vector. Each percentage has an equal probability of happening. More formally, jaya is described as follows:
+Jaya creates a new solution by moving an existing solution towards the best solution found, while simultaneously moving it away from the worst solution found. In the continous space, each movement vector is scaled by some continous value between zero and one. However, as the MDMKP is a binary formulation, there are no fractional movements. Instead, each bit is scaled either 0\% or 100\% of it's distance vector. 
+
+A strict conversion of the Jaya algorithm would require that the 0\% solution is selected over the 100\% solution according to two randomly chosen probabilites, one for the best solution, and one for the worst. However, testing has shown that a strategy that uniformly selects scaling factors outperforms weighted selection. This uniform selection strategy is formally defined as follows: 
 
  Given a population $X$, define $best$ as the best performing solution, and $worst$ as the worst performing solution. $r$ is the random function, and uniformly selects an element from the set. For every solution $S$ in the population, construct a modified solution according to the following transformation applied to every bit $i$ in $S$:
 \begin{equation} S_i' = S_i + r(\{0, 1\})*(best_i - S_i) - r(\{0, 1\})*(worst_i - S_i) > 0 \end{equation}
+
+For the faithful but worse performing method, the following transformation is used: 
+\begin{equation} S_i' = S_i + r(\{0, 1\})*(best_i - S_i) - r(\{0, 1\})*(worst_i - S_i) > 0 \end{equation}
+
+
 If the new solution is valid and performs better than the old solution, replace it in the population. One iteration of Jaya will attempt this transformation for every solution in the population. 
+
 
 \subsection{TLBO}
 
@@ -58,6 +66,14 @@ S_i' = \Big(S_i + r(\{0, 1\})*\big(best_i - r(\{1, 2\})*(r([0, 1]) < average_i)\
 Notice that the random function $r$ was given a continous range from 0 to 1, not a discrete set. This probability method has been shown to give better results than the median method in testing. 
 
 The TBO transform is used in the same way as the jaya transform: apply to every solution in the population, and replace the solutions if the new solutions have better objective function scores.
+
+Dr.~Rao originally specified that only the best solution is used as the teacher. However, performance is improved if a variety of teachers are selected from some top $n$ of best performing solutions. This introduces a parameter to the search, which violates the original goal of a parameterless set of metaheuristics. But, the performance is considerably improved. 
+
+Similarly, the mean could be calculated from a subset of the population, instead of the whole, in order to increase the variety of generated solutions. However, this would be computationally expensive. 
+
+\paragraph{CBO}
+
+In the same way solutions are moved according to the vector from the mean to a selected good solution, they can be moved according to the vector from a selected bad solution to the mean. This is referred to as Clown Based Optimation, and is otherwise implemented identically to TBO. 
 
 \subsubsection{LBO}
 
@@ -253,10 +269,26 @@ Manhattan distance, also called cityblock distance, is a measure of the discrete
 
 Linear Assignment, or the Assignment Problem, is the process of assigning $n$ agents to $n$ tasks to minimize the cost of assignment\footnote{See https://bit.ly/2wPh9mQ for a visualization}. 
 
-For every problem, an assignment cost can be computed between the resulting populations of two metaheuristics. A cost matrix can be constructed from a set of metaheuristic. Averaging the cost matrixes for every problem in a dataset will increase consistency of the results. 
+For every problem, an assignment cost can be computed between the resulting populations of two metaheuristics. A cost matrix can be constructed from a set of metaheuristics. Averaging the cost matrixes for every problem in a dataset will increase consistency of the results. 
 
+The size of this matrix increases quadratically to the amount of metaheuristics tested. It quickly becomes incomprehensible:
 
-\csvautotabular{data/rounded_ds5_matrix_limited.csv}
+\begin{table}[htbp]
+  \resizebox{0.2 \textwidth}{!}{\begin{minipage}{\textwidth}
+        \caption{Distance Matrix}
+        \csvautotabular{data/rounded_ds5_matrix_limited.csv}
+      \end{minipage}}
+\end{table}
+
+An algorithm called Multi-Dimensional Scaling will attempt to find a low dimensional mapping of a cost matrix such that the sum of the squares of the differences of the distances between points among the high and low dimensional space is minimized. The MDS graph is much more comprehensible:
+
+\includegraphics[width=\linewidth]{graphs/ds5_matrix.png}
+
+The darkness of the color signifies the relative performance of the best scoring solution: 100\% dark signifies the metaheuristic had the best performing solution, and 0\% dark is the worst performing. The other colors are scaled linearly. 
+
+However, the color for this graph is blown out by the inclusion of control and primitive local search methods. Here, control does not have a VND search embedded, in order to see the relation between them. By excluding these low performing metaheuristics, we can effectively zoom in on the region of interest: 
+
+\includegraphics[width=\linewidth]{graphs/ds5_matrix_limited.png}
 
 \section{Creating a Hybrid Method}
 
