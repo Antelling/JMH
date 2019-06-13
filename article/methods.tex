@@ -30,18 +30,20 @@ Institute of Technology%\cite{jaya}
 . It was originally developed to work on continous
 problems, but has been modified to work on binary problems.
 
-Given a population $X$, define $best$ as the best performing solution, and $worst$ as the worst performing solution. $r$ randomly selects an element from the set. For every solution $S$ in the population, construct a modified solution according to the following transformation:
-\begin{equation} S' = S + r(\{0, 1\})*(best - S) - r(\{0, 1\})*(worst - S) \end{equation}
-If any element in the solution is greater than 1, set it equal to 1, and if any element is less than 0, set it equal to 0. If the new solution performs better than the old solution, replace it in the population. One iteration of Jaya will attempt this transformation for every solution in the population. 
+Jaya creates a new solution by moving an existing solution towards the best solution found, while simultaneously moving it away from the worst solution found. In the continous space, each movement vector is scaled by some continous value between zero and one. However, as the MDMKP is a binary formulation, there are no fractional movements. Instead, each bit is scaled either 0\% or 100\% of it's distance vector. Each percentage has an equal probability of happening. More formally, jaya is described as follows:
 
-\subsection{TLBO }
+ Given a population $X$, define $best$ as the best performing solution, and $worst$ as the worst performing solution. $r$ is the random function, and uniformly selects an element from the set. For every solution $S$ in the population, construct a modified solution according to the following transformation applied to every bit $i$ in $S$:
+\begin{equation} S_i' = S_i + r(\{0, 1\})*(best_i - S_i) - r(\{0, 1\})*(worst_i - S_i) > 0 \end{equation}
+If the new solution is valid and performs better than the old solution, replace it in the population. One iteration of Jaya will attempt this transformation for every solution in the population. 
+
+\subsection{TLBO}
 
 Teaching-Learning Based Optimization is another metaheuristic developed by Dr.~Rao for continous problems %\cite{TLBO}
 . It is a two phase algorithm: the Teaching phase, and the Learning phase.
 
 \subsubsection{TBO}
 
-The first phase, Teaching Based Optimization, is defined as follows: For every bit index $i$ in a solution $S$, update a new solution according to: 
+The first phase, Teaching Based Optimization, constructs new solutions by moving a given solution along the distance vector found by moving from the mean solution to the best solution. The vector is sometimes doubled. Once again, partial movements are impossible, so a 0\% or 100\% strategy is applied to each individual bit. Formally, it is defined as follows: For every bit index $i$ in a solution $S$, update a new solution according to: 
 \begin{equation}
 S_i' = \Big(S_i + r(\{0, 1\})*\big(best_i - r(\{1, 2\})*average_i\big)\Big) > 0
 \end{equation}
@@ -59,7 +61,7 @@ The TBO transform is used in the same way as the jaya transform: apply to every 
 
 \subsubsection{LBO}
 
-The Learning based phase is more complicated, and acts on pairs of solutions. The procedure is documented in algorithm 1. 
+The second phase of TLBO, Learning Based Optimization, acts by selecting two solutions, and moving the worse performing solution some distance along the vector between them \footnote{It is worth noting that the vector from the better to the worse solution contains all the same points as the vector from the worse to the better---the only difference is what solution is replaced, if the new solution yields an improved score.}. If the new solution has a better score than the worse performing solution, it is replaced. Solutions cannot be the same. In this implementation, a single instance of LBO is guaranteed to act on every solution at least once, like so:
 
 \begin{algorithm}
 \caption{Learning Based Optimization}
@@ -83,9 +85,9 @@ The Learning based phase is more complicated, and acts on pairs of solutions. Th
 
 In Rao's implementation, a check to make sure the two selected solutions have different objective values is included. This check is omitted from this implementation, as it is arbitrary, and the uniqueness check is sufficient. 
 
-LBO is another method that is applied to every solution in the population. 
+LBO can be thought of as a genetic algorithm with two parents. This effect will be later demonstrated in section \ref{compare}: Comparing Metaheuristics.
 
-LBO and TBO are typically chained together to produce the TLBO algorithm. 
+While TBO and LBO are typically used together to form the TLBO algorithm, each can be used individually. 
 
 \clearpage 
 \subsection{Genetic Algorithm}
@@ -102,7 +104,7 @@ The procedure for generating a single new solution is as follows. First, $n$ sol
 
 The Genetic Algorithm is used to generate new solutions, and if the new solution scores better than its worst performing parent, the parent is replaced. This process continues until some termination criteria is met. 
 
-This Genetic Algorithm is not a parameterless method, as the amount of parents must be determined by the user. However, testing on the MDMKP with 2, 3, 4, and 5 parents did show significant and consistent differences between the performance of different numbers of parents. 
+This Genetic Algorithm is not a parameterless method, as the amount of parents must be determined by the user. However, testing on the MDMKP with 2, 3, 4, and 5 parents did not show significant and consistent differences between the performance of different numbers of parents. 
 
 \subsection{Variable Neighborhood Descent}
 
@@ -241,7 +243,20 @@ To ensure that new solutions are significantly unique, the VND local search is a
 
 Combining a local search with other metaheuristics is a strategy that has been tried before, for example by Dr. Vasko et. al. \cite{mmkp}. However, Dr. Vasko et. al. created a hybrid method consisting on a local search followed by some other metaheuristic. Testing has shown that this implementations method of embedding a local search, rather than prefixing one, reduces the percent deviation from the optimal by five to ten times. 
 
-The local search is also embedded into initial population generation, which is why "control" is VND, and is used as the source population for other metaheuristics. 
+The local search is also embedded into initial population generation, in order to prevent initial solutions adjacent to a local minima from becoming "stuck" in the population. This is why "control" is VND, and is used as the source population for other metaheuristics. 
+
+\section{Comparing Metaheuristics} \label{compare}
+
+Some metaheuristics, such as LBO and GA, are very similar for some circumstances. It would be advantageous to be able to quantify exactly how similar these algorithms are. This can be done by totalling the Manhattan distances between the linear assigment of one resultant swarm to another. 
+
+Manhattan distance, also called cityblock distance, is a measure of the discrete steps needed to turn one solution into another. For binary problems, it is a measure of how many bits are different. 
+
+Linear Assignment, or the Assignment Problem, is the process of assigning $n$ agents to $n$ tasks to minimize the cost of assignment\footnote{See https://bit.ly/2wPh9mQ for a visualization}. 
+
+For every problem, an assignment cost can be computed between the resulting populations of two metaheuristics. A cost matrix can be constructed from a set of metaheuristic. Averaging the cost matrixes for every problem in a dataset will increase consistency of the results. 
+
+
+\csvautotabular{data/rounded_ds5_matrix_limited.csv}
 
 \section{Creating a Hybrid Method}
 

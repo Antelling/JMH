@@ -88,23 +88,24 @@ function TBO_prob_perturb(solution::BitList, best_solution::BitList, means::Vect
     #this is terrible and unreadable but super fast
     #the rand([1, 2]) is the tf value. Which isn't a parameter just a random number
     #rand() < means[i] is how I made the means[] discrete. It works better than using the median
-    return [bit + (best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
+    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
 end
 
 function TBO_med_perturb(solution::BitList, best_solution::BitList, medians::Vector{Bool})
-    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
-    # return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
+    return [bit + rand([0,1])*(best_solution[i]-(rand([1, 2]))*medians[i]) > 0 for (i, bit) in enumerate(solution)]
 end
 
 """returns a configured LBO instance"""
-function LBO_monad(; repair_op::Function=VSRO, local_search::Function=identity)
+function LBO_monad(; repair_op::Function=VSRO, local_search::Function=identity, v2::Bool=false)
     return function LBO_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
+        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, v2=v2)
     end
 end
 
 
-function LBO(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO, verbose::Int=0, local_search::Function=identity)
+function LBO(swarm::Swarm, problem::ProblemInstance;
+        repair_op::Function=VSRO, verbose::Int=0, local_search::Function=identity,
+        v2::Bool=false)
     n_dimensions = length(problem.objective)
     swarm_len = length(swarm)
     best_score = 0
@@ -144,6 +145,11 @@ function LBO(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO, v
         if verbose > 4 println("applying bit transformations...") end
 
         new_student = copy(student)
+        if v2
+            new_student = v2_LBO_perturb(student, teacher)
+        else
+            new_student = LBO_perturb(student, teacher)
+        end
         for j in 1:n_dimensions
             new_bit = new_student[j] + rand([0,1]) * (teacher[j] - new_student[j])
             new_student[j] = new_bit
@@ -167,4 +173,66 @@ function LBO(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO, v
     end
 
     return (swarm, best_score)
+end
+
+function LBO_perturb(student::BitList, teacher::BitList)::BitList
+    return [student[j] + rand([0,1]) * (teacher[j] - student[j]) for j in 1:length(student)]
+end
+
+function v2_LBO_perturb(student::BitList, teacher::BitList)::BitList
+    weight = rand()
+    return [student[j] + (rand() < weight) * (teacher[j] - student[j]) for j in 1:length(student)]
+end
+
+function CBO_monad(;repair_op::Function=VSRO, local_search::Function=identity, bottom_n::Int=1)
+    return function CBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return CBO(swarm, problem, repair_op=repair_op,
+            verbose=verbose, local_search=local_search, bottom_n=bottom_n)
+    end
+end
+
+function CBO(swarm::Swarm, problem::ProblemInstance; prob::Bool=true, bottom_n::Int=1,
+            repair_op::Function=VSRO, local_search::Function=identity,
+            verbose::Int=0)
+    n_dimensions = length(problem.objective)
+
+    means = zeros(n_dimensions)
+    for s in swarm
+        means .+= s
+    end
+    means ./= n_dimensions
+
+    #select a solution from the bottom n of solutions
+    best_solution::BitList = []
+    best_score = 0
+    new_swarm = [(s, score_solution(s, problem)) for s in swarm]
+    sort!(new_swarm, by=x -> -x[2])
+    worst_solution = rand(new_swarm[1:bottom])[1]
+
+    #apply the CBO transformation to each element of the data, and accept the change if the
+    #score improves
+    for i in 1:length(swarm)
+        new_solution = CBO_perturb(swarm[i], best_solution, means)
+
+        val = is_valid(new_solution, problem)
+        if !val
+            val, new_solution = repair_op(new_solution, problem)
+            if !val
+                continue
+            end
+        end
+        new_solution = local_search(new_solution, problem)
+        s = score_solution(new_solution, problem)
+        if s > score_solution(swarm[i], problem) && !(new_solution in swarm)
+            swarm[i] = new_solution
+            if s > best_score
+                best_score = s
+            end
+        end
+    end
+    return (swarm, best_score)
+end
+
+function CBO_perturb(solution::BitList, worst_solution::BitList, means::Vector{Float64})
+    return [bit - rand([0,1])*(worst_solution[i]-(rand([1, 2]))*(rand() < means[i])) > 0 for (i, bit) in enumerate(solution)]
 end

@@ -1,14 +1,14 @@
 """returns a configured jaya instance"""
-function jaya_monad(; repair_op::Function=VSRO, local_search=identity)
+function jaya_monad(; repair_op::Function=VSRO, local_search::Function=identity, v2::Bool=false)
     return function jaya_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return jaya(swarm, problem, repair_op=repair_op, local_search=local_search)
+        return jaya(swarm, problem, repair_op=repair_op, local_search=local_search, v2=v2)
     end
 end
 
 """implementation of http://www.growingscience.com/ijiec/Vol7/IJIEC_2015_32.pdf
 But any continous range was made into a sample of discrete integers on that range."""
 function jaya(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO,
-            local_search::Function=identity, verbose::Int=0)
+            local_search::Function=identity, verbose::Int=0, v2::Bool=false)
     n_dimensions = length(problem.objective)
 
     best_solution::BitList = []
@@ -32,7 +32,11 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO,
     end
 
     for i in 1:length(swarm)
-        new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
+        if v2
+            new_solution = v2_jaya_perturb(swarm[i], best_solution, worst_solution)
+        else
+            new_solution = jaya_perturb(swarm[i], best_solution, worst_solution)
+        end
 
         val = is_valid(new_solution, problem)
         if !val
@@ -56,4 +60,10 @@ end
 """apply the internal jaya transformation to a single solution in the swarm"""
 function jaya_perturb(solution::BitList, best_solution::BitList, worst_solution::BitList)
     return [bit + rand([0, 1])*(best_solution[i]-bit) - rand([0, 1])*(worst_solution[i]-bit) > 0 for (i, bit) in enumerate(solution)]
+end
+
+function v2_jaya_perturb(solution::BitList, best_solution::BitList, worst_solution::BitList)
+    best_vector_scale = rand()
+    worst_vector_scale = rand()
+    return [bit + (rand()<best_vector_scale)*(best_solution[i]-bit) - (rand()<worst_vector_scale)*(worst_solution[i]-bit) > 0 for (i, bit) in enumerate(solution)]
 end

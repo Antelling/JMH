@@ -18,56 +18,26 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const results_dir = "results/gigantic_search/"
+const results_dir = "results/TBO_exploration/"
 
 function main(;verbose::Int=0)
-	for dataset in [4, 5, 6, 8, 9]
+	for dataset in [3, 4, 5]
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		if verbose > 0
 			ps = "$(problems)"
 		end
 		n_fails = 25
-		time_limit = 10
+		time_limit = 4
 		algorithms = [(control_monad(), "control"),
-				(iterate_monad(LS_monad(), n_fails=2, time_limit=time_limit), "LS"),
-				(iterate_monad(LF_monad(), n_fails=2, time_limit=time_limit), "LF"),
-				(iterate_monad(VND_monad(), n_fails=2, time_limit=time_limit), "VND"),
-				(iterate_monad(GA_monad(local_search=VND, n_parents=2), n_fails=n_fails, time_limit=time_limit), "GA2_ls"),
-				(iterate_monad(GA_monad(local_search=VND, n_parents=5), n_fails=n_fails, time_limit=time_limit), "GA5_ls"),
-				(iterate_monad(GA_monad(local_search=VND, n_parents=10), n_fails=n_fails, time_limit=time_limit), "GA10_ls"),
-				(iterate_monad(GA_monad(local_search=VND, n_parents=20), n_fails=n_fails, time_limit=time_limit), "GA20_ls"),
-				(iterate_monad(GA_monad(local_search=VND, n_parents=30), n_fails=n_fails, time_limit=time_limit), "GA30_ls"),
-				(iterate_monad(GA_monad(n_parents=2), n_fails=n_fails, time_limit=time_limit), "GA2"),
-				(iterate_monad(GA_monad(n_parents=5), n_fails=n_fails, time_limit=time_limit), "GA5"),
-				(iterate_monad(GA_monad(n_parents=10), n_fails=n_fails, time_limit=time_limit), "GA10"),
-				(iterate_monad(GA_monad(n_parents=20), n_fails=n_fails, time_limit=time_limit), "GA20"),
-				(iterate_monad(GA_monad(n_parents=30), n_fails=n_fails, time_limit=time_limit), "GA30"),
-				(iterate_monad(TBO_monad(local_search=VND, top_n=1), n_fails=n_fails, time_limit=time_limit), "T1_ls"),
-				(iterate_monad(TBO_monad(local_search=VND, top_n=5), n_fails=n_fails, time_limit=time_limit), "T5_ls"),
-				(iterate_monad(TBO_monad(local_search=VND, top_n=10), n_fails=n_fails, time_limit=time_limit), "T10_ls"),
-				(iterate_monad(TBO_monad(local_search=VND, top_n=20), n_fails=n_fails, time_limit=time_limit), "T20_ls"),
-				(iterate_monad(TBO_monad(local_search=VND, top_n=30), n_fails=n_fails, time_limit=time_limit), "T30_ls"),
-				(iterate_monad(TBO_monad(top_n=1), n_fails=n_fails, time_limit=time_limit), "T1"),
-				(iterate_monad(TBO_monad(top_n=5), n_fails=n_fails, time_limit=time_limit), "T5"),
-				(iterate_monad(TBO_monad(top_n=10), n_fails=n_fails, time_limit=time_limit), "T10"),
-				(iterate_monad(TBO_monad(top_n=20), n_fails=n_fails, time_limit=time_limit), "T20"),
-				(iterate_monad(TBO_monad(top_n=30), n_fails=n_fails, time_limit=time_limit), "T30"),
-				(iterate_monad(jaya_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "jaya_ls"),
-				(iterate_monad(jaya_monad(), n_fails=n_fails, time_limit=time_limit), "jaya"),
-				(iterate_monad(TLBO_monad(local_search=VND, top_n=1), n_fails=n_fails, time_limit=time_limit), "TL1_ls"),
-				(iterate_monad(TLBO_monad(local_search=VND, top_n=5), n_fails=n_fails, time_limit=time_limit), "TL5_ls"),
-				(iterate_monad(TLBO_monad(local_search=VND, top_n=10), n_fails=n_fails, time_limit=time_limit), "TL10_ls"),
-				(iterate_monad(TLBO_monad(local_search=VND, top_n=20), n_fails=n_fails, time_limit=time_limit), "TL20_ls"),
-				(iterate_monad(TLBO_monad(local_search=VND, top_n=30), n_fails=n_fails, time_limit=time_limit), "TL30_ls"),
-				(iterate_monad(TLBO_monad(top_n=1), n_fails=n_fails, time_limit=time_limit), "TL1"),
-				(iterate_monad(TLBO_monad(top_n=5), n_fails=n_fails, time_limit=time_limit), "TL5"),
-				(iterate_monad(TLBO_monad(top_n=10), n_fails=n_fails, time_limit=time_limit), "TL10"),
-				(iterate_monad(TLBO_monad(top_n=20), n_fails=n_fails, time_limit=time_limit), "TL20"),
-				(iterate_monad(TLBO_monad(top_n=30), n_fails=n_fails, time_limit=time_limit), "TL30"),
-				(iterate_monad(LBO_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "LBO_ls"),
-				(iterate_monad(LBO_monad(), n_fails=n_fails, time_limit=time_limit), "LBO"),
-				(iterate_monad(G2JG4TL_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "G2JG4TL_ls"),
-				(iterate_monad(G2JG4TL_monad(), n_fails=n_fails, time_limit=time_limit), "G2JG4TL")]
+			(iterate_monad(TBO_monad(local_search=VND, top_n=1), n_fails=n_fails, time_limit=time_limit), "T1_ls"),
+			(iterate_monad(TBO_monad(local_search=VND, top_n=3), n_fails=n_fails, time_limit=time_limit), "T3_ls"),
+			(iterate_monad(CBO_monad(local_search=VND, bottom_n=1), n_fails=n_fails, time_limit=time_limit), "C1_ls"),
+			(iterate_monad(CBO_monad(local_search=VND, bottom_n=3), n_fails=n_fails, time_limit=time_limit), "C3_ls"),
+			(iterate_monad(TBO_monad(local_search=identity, top_n=1), n_fails=n_fails, time_limit=time_limit), "T1"),
+			(iterate_monad(TBO_monad(local_search=identity, top_n=3), n_fails=n_fails, time_limit=time_limit), "T3"),
+			(iterate_monad(CBO_monad(local_search=identity, bottom_n=1), n_fails=n_fails, time_limit=time_limit), "C1"),
+			(iterate_monad(CBO_monad(local_search=identity, bottom_n=3), n_fails=n_fails, time_limit=time_limit), "C3"),
+		]
 
 		results = Dict{String,Vector{Tuple{Int,Float64,Float64,String}}}()
 		for (_alg, name) in algorithms
@@ -82,7 +52,7 @@ function main(;verbose::Int=0)
 				p = "$(problem)"
 			end
 
-	        swarm = greedy_construct(problem, 30, repair_op=VSRO, local_search=identity, verbose=1, max_attempts=500_000)
+	        swarm = greedy_construct(problem, 30, repair_op=VSRO, local_search=VND, verbose=1, max_attempts=500_000)
 
 			for (alg, name) in algorithms
 				diversity = 0
@@ -94,8 +64,10 @@ function main(;verbose::Int=0)
 					end
 				elseif length(swarm) > 0
 					best_score = find_best_score(swarm, problem)
+					newswarm = swarm
 				else
 					best_score = 0
+					newswarm = swarm
 				end
 
 				end_time = time_ns()

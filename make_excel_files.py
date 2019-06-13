@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('ds4_matrix_limited.xlsx')
+workbook = xlsxwriter.Workbook('ds5_matrix_limited.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -323,7 +323,7 @@ solo_60s_files = [
 ]
 
 alg_hit_list = [
-    "T1", "T5", "T10", "T20", "T30", "LF", "VND", "LS"
+    "T1", "T5", "T10", "T20", "T30", "LF", "VND", "LS", "control"
 ]
 
 # Brok = workbook.add_worksheet("Wrong Optimals")
@@ -343,6 +343,6 @@ alg_hit_list = [
 # full_results(SolFulRes60, solo_60s_files)
 
 test = workbook.add_worksheet("test")
-similarity_matrixes(test, [("gigantic_search/4.json", "1")], hit_list=alg_hit_list)
+similarity_matrixes(test, [("gigantic_search/5.json", "1")], hit_list=alg_hit_list)
 
 workbook.close()

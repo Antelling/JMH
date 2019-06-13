@@ -47,3 +47,10 @@ function VND_TLBO_monad(;repair_op::Function=VSRO)
 		return TLBO(swarm, problem, repair_op=repair_op, verbose=verbose)
     end
 end
+
+function final(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+	swarm = iterate_monad(TBO_monad(top_n=15, local_search=identity), n_fails=5, time_limit=3)(swarm, problem)[1]
+	swarm = iterate_monad(GA_monad(n_parents=3, local_search=identity), n_fails=10, time_limit=6)(swarm, problem)[1]
+	swarm = BF_VND(swarm, problem, n_branches=3)[1]
+	return iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=10, time_limit=6)(swarm, problem)
+end

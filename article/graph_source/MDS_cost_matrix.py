@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.manifold import MDS
+from sklearn.manifold import MDS, TSNE, SpectralEmbedding
 from sklearn.preprocessing import MinMaxScaler
 from matplotlib import pyplot as plt
 import json
@@ -16,8 +16,10 @@ def get_total_score(alg_results):
         total += swarm[0][1]
     return total
 
-for matrix_file, score_file in [("../data/ds4_matrix.csv", "../../results/gigantic_search/4.json"),
-        ("../data/ds5_matrix.csv", "../../results/gigantic_search/5.json")]:
+for matrix_file, score_file, title in [("../data/ds5_matrix_limited.csv", "../../results/gigantic_search/5.json", "Dataset Five Limited"),
+        ("../data/ds4_matrix_limited.csv", "../../results/gigantic_search/4.json", "Dataset Four Limited"),
+        ("../data/ds4_matrix.csv", "../../results/gigantic_search/4.json", "Dataset Four"),
+        ("../data/ds5_matrix.csv", "../../results/gigantic_search/5.json", "Dataset Five")]:
 
     data = open(matrix_file, "r").read()
 
@@ -29,6 +31,8 @@ for matrix_file, score_file in [("../data/ds4_matrix.csv", "../../results/gigant
     labels = data[0][1:]
 
     mds = MDS(dissimilarity="precomputed")
+    # mds = TSNE(metric="precomputed")
+    # mds = SpectralEmbedding(affinity="precomputed")
     decomposed = mds.fit_transform(matrix.astype(float))
 
     results = json.loads(open(score_file, "r").read())
@@ -40,7 +44,8 @@ for matrix_file, score_file in [("../data/ds4_matrix.csv", "../../results/gigant
     values = [a[0] for a in values] #get rid of the sklearn 2d array constraint
 
     fig, ax = plt.subplots()
-    ax.scatter(decomposed[:, 0], decomposed[:, 1], c=values, cmap="plasma")
+    ax.scatter(decomposed[:, 0], decomposed[:, 1], c=values, cmap="OrRd")
+    plt.title(title)
 
     for i, txt in enumerate(labels):
         ax.annotate(txt, (decomposed[i, 0]+5, decomposed[i, 1]+5))

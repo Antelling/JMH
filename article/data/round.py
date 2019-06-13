@@ -5,9 +5,9 @@ with open(sys.argv[1], "r") as file:
 
 def try_round(x):
     try:
-        return str(round(float(x), 2))
+        return str(int(float(x)/10))
     except ValueError:
-        return x.replace("_", "\\_")
+        return x.replace("_", "")
 
 data = data.split("\n")
 data = [line.split(",") for line in data]
