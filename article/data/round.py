@@ -5,7 +5,7 @@ with open(sys.argv[1], "r") as file:
 
 def try_round(x):
     try:
-        return str(int(float(x)/10))
+        return str(round(float(x),2))
     except ValueError:
         return x.replace("_", "")
 

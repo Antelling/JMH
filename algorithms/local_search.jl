@@ -26,7 +26,7 @@ function local_swap(sol::BitList, problem::ProblemInstance; verbose::Int=0)
     return new_sol
 end
 
-function _individual_swap(sol::BitList, problem::ProblemInstance; only_best::Bool=true, top_n::Int=10)
+function _individual_swap(sol::BitList, problem::ProblemInstance; only_best::Bool=true)
     objective_value = sum(problem.objective .* sol)
     upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
@@ -75,7 +75,7 @@ function _individual_swap(sol::BitList, problem::ProblemInstance; only_best::Boo
     end
     sort!(discovered_feasible, by=i->i[1])
     if only_best
-        return discovered_feasible[1][1]
+        return discovered_feasible[end][1]
     else
         return [a[1] for a in discovered_feasible]
     end

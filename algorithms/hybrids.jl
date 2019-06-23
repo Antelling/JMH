@@ -1,15 +1,48 @@
-function ordered_walk_through_algs(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
-			verbose::Int=0, n_fails::Int=5)
+function pogo_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
+			verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
+	n_algs = length(algs)
+	tl = Int(round(time_limit/n_algs))
 	for alg in algs
-		swarm, current_score = iterate_alg(alg, swarm, problem, n_fails=n_fails)
+		swarm, current_score = iterate_alg(alg, swarm, problem, n_fails=n_fails, time_limit=tl)
 	end
 	return (swarm, find_best_score(swarm, problem))
 end
 
-"""returns a configured ordered walk instance"""
-function ordered_walk_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5)
-	return function ordered_monad(swarm::Swarm, problem::ProblemInstance)
-        return ordered_walk_through_algs(algs, swarm, problem, verbose=verbose, n_fails=n_fails)
+function pogo_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
+	return function pogo_monad(swarm::Swarm, problem::ProblemInstance)
+        return pogo_hybrid(algs, swarm, problem, verbose=verbose, n_fails=n_fails, time_limit=time_limit)
+    end
+end
+
+function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
+			verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
+	cont = true
+	start_time = time()
+	while cont
+		for alg in algs
+			if time() - start_time > time_limit
+				cont = false
+				break
+			end
+			swarm, current_score = alg(swarm, problem, verbose=verbose-1)
+		end
+	end
+	return (swarm, find_best_score(swarm, problem))
+end
+
+function skate_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
+	return function skate_monad(swarm::Swarm, problem::ProblemInstance)
+        return skate_hybrid(algs, swarm, problem, verbose=verbose, n_fails=n_fails, time_limit=time_limit)
+    end
+end
+
+function ordered_applicator_monad(algs::Vector)
+	return function ordered_applicator(swarm::Swarm, problem::ProblemInstance)
+		best = 0
+        for alg in algs
+			swarm, best = alg(swarm, problem)
+		end
+		return (swarm, best)
     end
 end
 

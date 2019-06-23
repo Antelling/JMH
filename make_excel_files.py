@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('ds5_matrix_limited.xlsx')
+workbook = xlsxwriter.Workbook('ds12_summary.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -343,6 +343,7 @@ alg_hit_list = [
 # full_results(SolFulRes60, solo_60s_files)
 
 test = workbook.add_worksheet("test")
-similarity_matrixes(test, [("gigantic_search/5.json", "1")], hit_list=alg_hit_list)
+# similarity_matrixes(test, [("gigantic_search/1.json", "1")])
+only_percentages(test, [("gigantic_search/4.json", "4")])
 
 workbook.close()

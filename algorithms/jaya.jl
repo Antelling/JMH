@@ -60,7 +60,7 @@ end
 function sloppy_jaya_monad(; repair_op::Function=VSRO, local_search::Function=identity,
         v2::Bool=false, top_n::Int=1, bottom_n::Int=1)
     return function jaya_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return jaya(swarm, problem, repair_op=repair_op,
+        return sloppy_jaya(swarm, problem, repair_op=repair_op,
                 local_search=local_search, v2=v2, top_n=top_n, bottom_n=bottom_n)
     end
 end

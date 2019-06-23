@@ -16,10 +16,7 @@ def get_total_score(alg_results):
         total += swarm[0][1]
     return total
 
-for matrix_file, score_file, title in [("../data/ds5_matrix_limited.csv", "../../results/gigantic_search/5.json", "Dataset Five Limited"),
-        ("../data/ds4_matrix_limited.csv", "../../results/gigantic_search/4.json", "Dataset Four Limited"),
-        ("../data/ds4_matrix.csv", "../../results/gigantic_search/4.json", "Dataset Four"),
-        ("../data/ds5_matrix.csv", "../../results/gigantic_search/5.json", "Dataset Five")]:
+for matrix_file, score_file, title in [("../data/ds4_matrix.csv", "../../results/gigantic_search/4.json", "Dataset Four")]:
 
     data = open(matrix_file, "r").read()
 
