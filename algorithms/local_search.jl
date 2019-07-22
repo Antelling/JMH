@@ -26,7 +26,51 @@ function local_swap(sol::BitList, problem::ProblemInstance; verbose::Int=0)
     return new_sol
 end
 
-function _individual_swap(sol::BitList, problem::ProblemInstance; only_best::Bool=true)
+function _individual_swap(sol::BitList, problem::ProblemInstance)
+    objective_value = sum(problem.objective .* sol)
+    upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
+    lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
+
+    best_found_objective = objective_value
+    best_found_solution::BitList = deepcopy(sol)
+    for i in 1:length(sol)
+        if sol[i]
+            for j in 1:length(sol)
+                if !sol[j]
+                    valid = true
+                    for p in 1:length(problem.upper_bounds)
+                        changed_value = upper_values[p] - problem.upper_bounds[p][1][i] + problem.upper_bounds[p][1][j]
+                        if changed_value > problem.upper_bounds[p][2]
+                            valid = false
+                            break
+                        end
+                    end
+                    if valid
+                        for p in 1:length(problem.lower_bounds)
+                            changed_value = lower_values[p] - problem.lower_bounds[p][1][i] + problem.lower_bounds[p][1][j]
+                            if changed_value < problem.lower_bounds[p][2]
+                                valid = false
+                                break
+                            end
+                        end
+                    end
+                    if valid
+                        new_objective_value = objective_value - problem.objective[i] + problem.objective[j]
+                        if new_objective_value > best_found_objective
+                            best_found_objective = new_objective_value
+                            best_found_solution = deepcopy(sol)
+                            best_found_solution[i] = false
+                            best_found_solution[j] = true
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return best_found_solution
+end
+
+function _slow_individual_swap(sol::BitList, problem::ProblemInstance; only_best::Bool=true)
     objective_value = sum(problem.objective .* sol)
     upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
     lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]

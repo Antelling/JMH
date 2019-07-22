@@ -7,7 +7,7 @@ def try_round(x):
     try:
         return str(round(float(x),2))
     except ValueError:
-        return x.replace("_", "")
+        return x.replace("_", "\_")
 
 data = data.split("\n")
 data = [line.split(",") for line in data]

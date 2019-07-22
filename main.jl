@@ -18,32 +18,72 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const results_dir = "results/ga_test/"
+const results_dir = "results/best_hybrid/"
 
 function main(;verbose::Int=0)
-	for dataset in 1:9
+	for dataset in 1:3
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
+		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_pop30_ls.json")
 		if verbose > 0
 			ps = "$(problems)"
 		end
 		n_fails = 25
 		time_limit = 30
 
+		diversifying_seq = [
+			LBO_monad(local_search=VND),
+			GA_monad(n_parents=5, local_search=VND),
+			TBO_monad(local_search=identity, top_n=30, v2=true),
+			sloppy_jaya_monad(top_n=3, bottom_n=3, v2=true),
+		]
+
+		intensifying_seq = reverse(diversifying_seq)
+
+		oscillating_seq = [
+			sloppy_jaya_monad(top_n=3, bottom_n=3, v2=true),
+			GA_monad(n_parents=5, local_search=VND),
+			TBO_monad(local_search=identity, top_n=30, v2=true),
+			LBO_monad(local_search=VND),
+		]
+
+		input = [skate_monad([
+			TLBO_monad(local_search=VND, top_n=30),
+			GA_monad(n_parents=5, local_search=VND)],
+			time_limit=20),
+		iterate_monad(
+			IGA_monad(max_parents=5, local_search=VND),
+			n_fails=100,
+			time_limit=10)
+		]
+		capstone = (ordered_applicator_monad(input), "capstone")
+
 		algorithms = [
 			(control_monad(), "control"),
-			(pogo_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>>IGA5_ls"),
-			(skate_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>IGA5_ls"),
-			(ordered_applicator_monad(
-				[iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=20),
-				iterate_monad(IGA_monad(max_parents=5, local_search=VND), n_fails=n_fails, time_limit=10)]), "ordered"),
-			(iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA2_ls"),
+			capstone,
+
+			# (pogo_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_diversify"),
+			# (pogo_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_intensify"),
+			# (pogo_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "pogo_oscillate"),
+			# (skate_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_diversify"),
+			# (skate_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_intensify"),
+			# (skate_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "skate_oscillate"),
+
+			# (pogo_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>>IGA5_ls"),
+			# (skate_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>IGA5_ls"),
+			# (ordered_applicator_monad(
+			# 	[iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=20),
+			# 	iterate_monad(IGA_monad(max_parents=5, local_search=VND), n_fails=n_fails, time_limit=10)]), "ordered"),
+			# (iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA2_ls"),
+
+			# (iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA2_ls"),
+			# (iterate_monad(GA_monad(n_parents=5, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA5_ls"),
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=1), n_fails=n_fails, time_limit=time_limit), "TL1_ls"),
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=15), n_fails=n_fails, time_limit=time_limit), "TL15_ls"),
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=30), n_fails=n_fails, time_limit=time_limit), "TL30_ls"),
-			# (iterate_monad(LBO_monad(local_search=VND)), "LBO_ls"),
+			# (iterate_monad(LBO_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "LBO_ls"),
 			# (iterate_monad(TBO_monad(local_search=identity, top_n=30, v2=true), n_fails=n_fails, time_limit=time_limit), "T30_v2"),
-			# (iterate_monad(sloppy_jaya_monad(local_search=VND, top_n=29, bottom_n=29)), "J30_ls"),
-			# (iterate_monad(sloppy_jaya_monad(top_n=3, bottom_n=3, v2=true)), "J3_v2"),
+			# (iterate_monad(sloppy_jaya_monad(local_search=VND, top_n=29, bottom_n=29), n_fails=n_fails, time_limit=time_limit), "J30_ls"),
+			# (iterate_monad(sloppy_jaya_monad(top_n=3, bottom_n=3, v2=true), time_limit=time_limit, n_fails=n_fails), "J3_v2"),
 			# (iterate_monad(CBO_monad(local_search=VND, bottom_n=30, v2=true), n_fails=n_fails, time_limit=time_limit), "C30_ls_v2"),
 		]
 
@@ -56,15 +96,15 @@ function main(;verbose::Int=0)
 			end
 		end
 
-	    for problem in problems[1+length(results["control"]):end]
+	    for index in 1+length(results["control"]):90
+			problem = problems[index]
+			swarm = populations[index]
 			println("")
 	        println("testing problem #$(problem.index)")
 
 			if verbose > 0
 				p = "$(problem)"
 			end
-
-	        swarm = greedy_construct(problem, 30, repair_op=VSRO, local_search=identity, verbose=1, max_attempts=500_000)
 
 			for (alg, name) in algorithms
 				diversity = 0
@@ -111,7 +151,7 @@ function main(;verbose::Int=0)
 	end
 end
 
-main(verbose=1)
+main()
 
 
 """

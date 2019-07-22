@@ -202,7 +202,10 @@ def full_results(worksheet, files):
                     times.append(data[k][1])
                     worksheet.write(i+2+k, j+3, data[k][2])
                     diversities.append(data[k][2])
-                    worksheet.write(i+2+k, j+4, data[k][3], bitstring_format)
+                    try:
+                        worksheet.write(i+2+k, j+4, parse_swarm(data[k][3])[-1][0], bitstring_format)
+                    except IndexError:
+                        pass
                 worksheet.write(i+2+len(data)+1, j-1, "averages:", title_format)
                 worksheet.write(i+2+len(data)+1, j, mean(scores))
                 worksheet.write(i+2+len(data)+1, j+1, mean(percentages))
@@ -285,65 +288,31 @@ def similarity_matrixes(worksheet, files, hit_list=None):
             for (l, otheralg) in enumerate(alg_list):
                 worksheet.write(i+k, j+l, matrix[alg][otheralg])
 
-hybrid_files = [
-    ("hybrid_60s/1_2019-05-26.json", "1"),
-    ("hybrid_60s/2_2019-05-26.json", "2"),
-    ("hybrid_60s/3_2019-05-26.json", "3"),
-    ("hybrid_60s/4_2019-05-26.json", "4"),
-    ("hybrid_60s/5_2019-05-26.json", "5"),
-    ("hybrid_60s/6_2019-05-26.json", "6"),
-    ("hybrid_60s/7_2019-05-27.json", "7"),
-    ("hybrid_60s/8_2019-05-28.json", "8"),
-    ("hybrid_60s/9_2019-05-28.json", "9")
+hybrid_files = [("hybrid_order/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
-]
+solo_30s_files = [("article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
-solo_10s_files = [
-    ("solo_10s/1_2019-05-25.json", "1"),
-    ("solo_10s/2_2019-05-25.json", "2"),
-    ("solo_10s/3_2019-05-25.json", "3"),
-    ("solo_10s/4_2019-05-25.json", "4"),
-    ("solo_10s/5_2019-05-25.json", "5"),
-    ("solo_10s/6_2019-05-26.json", "6"),
-    ("solo_10s/7_2019-05-26.json", "7"),
-    ("solo_10s/8_2019-05-27.json", "8"),
-    ("solo_10s/9_2019-05-27.json", "9"),
-]
 
-solo_60s_files = [
-    ("solo_60s/1_2019-05-25.json", "1"),
-    ("solo_60s/2_2019-05-25.json", "2"),
-    ("solo_60s/3_2019-05-26.json", "3"),
-    ("solo_60s/4_2019-05-26.json", "4"),
-    ("solo_60s/5_2019-05-26.json", "5"),
-    ("solo_60s/6_2019-05-27.json", "6"),
-    ("solo_60s/7_2019-05-27.json", "7"),
-    ("solo_60s/8_2019-05-28.json", "8"),
-    ("solo_60s/9_2019-05-29.json", "9"),
-]
 
-alg_hit_list = [
-    "T1", "T5", "T10", "T20", "T30", "LF", "VND", "LS", "control"
-]
+solo_5s_files = [("fast_article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
 # Brok = workbook.add_worksheet("Wrong Optimals")
-# HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
-# HybSum = workbook.add_worksheet("Hybrid 60s Summary")
-# SolFulRes60 = workbook.add_worksheet("Solo 60s Results")
-# SolSum60 = workbook.add_worksheet("Solo 60s Summary")
-# SolFulRes10 = workbook.add_worksheet("Solo 10s Results")
-# SolSum10 = workbook.add_worksheet("Solo 10s Summary")
+HybFulRes = workbook.add_worksheet("Hybrid 30s Results")
+HybSum = workbook.add_worksheet("Hybrid 30s Summary")
+SolFulRes60 = workbook.add_worksheet("Solo 30s Results")
+SolSum60 = workbook.add_worksheet("Solo 30s Summary")
+SolFulRes3 = workbook.add_worksheet("Solo 5s Results")
+SolSum3 = workbook.add_worksheet("Solo 5s Summary")
 
 # wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
-# only_percentages(HybSum, hybrid_files)
-# full_results(HybFulRes, hybrid_files)
-# only_percentages(SolSum10, solo_10s_files)
-# full_results(SolFulRes10, solo_10s_files)
-# only_percentages(SolSum60, solo_60s_files)
-# full_results(SolFulRes60, solo_60s_files)
+only_percentages(HybSum, hybrid_files)
+full_results(HybFulRes, hybrid_files)
+only_percentages(SolSum3, solo_5s_files)
+full_results(SolFulRes3, solo_5s_files)
+only_percentages(SolSum60, solo_30s_files)
+full_results(SolFulRes60, solo_30s_files)
 
-test = workbook.add_worksheet("test")
+# test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
-only_percentages(test, [("gigantic_search/4.json", "4")])
 
 workbook.close()
