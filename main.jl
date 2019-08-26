@@ -18,17 +18,17 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const results_dir = "results/best_hybrid/"
+const results_dir = "results/hybrid_60s/"
 
 function main(;verbose::Int=0)
-	for dataset in 1:3
+	for dataset in 1:9
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_pop30_ls.json")
 		if verbose > 0
 			ps = "$(problems)"
 		end
 		n_fails = 25
-		time_limit = 30
+		time_limit = 60
 
 		diversifying_seq = [
 			LBO_monad(local_search=VND),
@@ -59,14 +59,14 @@ function main(;verbose::Int=0)
 
 		algorithms = [
 			(control_monad(), "control"),
-			capstone,
+			# capstone,
 
-			# (pogo_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_diversify"),
-			# (pogo_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_intensify"),
-			# (pogo_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "pogo_oscillate"),
-			# (skate_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_diversify"),
-			# (skate_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_intensify"),
-			# (skate_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "skate_oscillate"),
+			(pogo_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_diversify"),
+			(pogo_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_intensify"),
+			(pogo_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "pogo_oscillate"),
+			(skate_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_diversify"),
+			(skate_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_intensify"),
+			(skate_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "skate_oscillate"),
 
 			# (pogo_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>>IGA5_ls"),
 			# (skate_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>IGA5_ls"),
@@ -77,6 +77,13 @@ function main(;verbose::Int=0)
 
 			# (iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA2_ls"),
 			# (iterate_monad(GA_monad(n_parents=5, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA5_ls"),
+			# (iterate_monad(GA_monad(n_parents=10, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA10_ls"),
+			# (iterate_monad(GA_monad(n_parents=20, local_search=VND), n_fails=n_fails, time_limit=time_limit), "GA20_ls"),
+			# (iterate_monad(IGA_monad(max_parents=5, local_search=VND), n_fails=n_fails, time_limit=time_limit), "IGA_ls"),
+			# (iterate_monad(CGA_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "CGA_ls"),
+			# (iterate_monad(IGA_monad(max_parents=5, local_search=identity), n_fails=n_fails, time_limit=time_limit), "IGA"),
+			# (iterate_monad(CGA_monad(local_search=identity), n_fails=n_fails, time_limit=time_limit), "CGA")
+
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=1), n_fails=n_fails, time_limit=time_limit), "TL1_ls"),
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=15), n_fails=n_fails, time_limit=time_limit), "TL15_ls"),
 			# (iterate_monad(TLBO_monad(local_search=VND, top_n=30), n_fails=n_fails, time_limit=time_limit), "TL30_ls"),
