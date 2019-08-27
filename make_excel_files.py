@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('ds12_summary.xlsx')
+workbook = xlsxwriter.Workbook('hybrids.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -288,29 +288,19 @@ def similarity_matrixes(worksheet, files, hit_list=None):
             for (l, otheralg) in enumerate(alg_list):
                 worksheet.write(i+k, j+l, matrix[alg][otheralg])
 
-hybrid_files = [("hybrid_order/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+hybrid_files = [("hybrid_60s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
 solo_30s_files = [("article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
-
-
 
 solo_5s_files = [("fast_article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
 # Brok = workbook.add_worksheet("Wrong Optimals")
-HybFulRes = workbook.add_worksheet("Hybrid 30s Results")
-HybSum = workbook.add_worksheet("Hybrid 30s Summary")
-SolFulRes60 = workbook.add_worksheet("Solo 30s Results")
-SolSum60 = workbook.add_worksheet("Solo 30s Summary")
-SolFulRes3 = workbook.add_worksheet("Solo 5s Results")
-SolSum3 = workbook.add_worksheet("Solo 5s Summary")
+HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
+HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 
 # wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
 only_percentages(HybSum, hybrid_files)
 full_results(HybFulRes, hybrid_files)
-only_percentages(SolSum3, solo_5s_files)
-full_results(SolFulRes3, solo_5s_files)
-only_percentages(SolSum60, solo_30s_files)
-full_results(SolFulRes60, solo_30s_files)
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
