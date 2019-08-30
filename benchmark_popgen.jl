@@ -30,7 +30,7 @@ end
 
 
 function main(;verbose::Int=0)
-	for dataset in [1, 1, 2, 3, 5]
+	for dataset in [1, 1, 7, 8, 9]
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 
 		plain_results = Vector{problem_results}()
