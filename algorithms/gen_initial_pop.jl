@@ -46,12 +46,13 @@ using Random: randperm
 see if it is valid. If it is not, optionally repair it."""
 function greedy_construct(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair_op::Function=VSRO,
             local_search::Function=identity,
-            max_attempts::Int=50_000)
+            max_attempts::Int=50_000, max_time::Int=60)
     n_dimensions = length(problem.objective)
 
     valid_solutions = Set{BitList}()
     attempts = 0
-    while length(valid_solutions) < n_solutions && attempts < max_attempts
+    start_time = time()
+    while length(valid_solutions) < n_solutions && attempts < max_attempts && (time() - start_time) < max_time
         attempts+=1
 
         order = randperm(n_dimensions)

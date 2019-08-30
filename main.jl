@@ -61,12 +61,12 @@ function main(;verbose::Int=0)
 			(control_monad(), "control"),
 			# capstone,
 
-			(pogo_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_diversify"),
-			(pogo_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_intensify"),
-			(pogo_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "pogo_oscillate"),
-			(skate_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_diversify"),
+			# (pogo_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_diversify"),
+			# (pogo_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "pogo_intensify"),
+			# (pogo_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "pogo_oscillate"),
+			# (skate_monad(diversifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_diversify"),
 			(skate_monad(intensifying_seq, n_fails=n_fails, time_limit=time_limit), "skate_intensify"),
-			(skate_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "skate_oscillate"),
+			# (skate_monad(oscillating_seq, n_fails=n_fails, time_limit=time_limit), "skate_oscillate"),
 
 			# (pogo_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>>IGA5_ls"),
 			# (skate_monad([GA_monad(n_parents=2, local_search=VND), IGA_monad(max_parents=5, local_search=VND)], n_fails=n_fails, time_limit=time_limit), "GA2_ls>IGA5_ls"),

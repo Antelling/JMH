@@ -18,6 +18,18 @@ function find_best_solution(swarm::Swarm, problem::ProblemInstance)
     return best_solution
 end
 
+function find_worst_solution(swarm::Swarm, problem::ProblemInstance)
+    worst_score::Int = score_solution(swarm[1], problem) + 1
+    worst_solution::BitList = []
+    for solution in swarm
+        if score_solution(solution, problem) < worst_score
+            worst_score = score_solution(solution, problem)
+            worst_solution = solution
+        end
+    end
+    return worst_solution
+end
+
 import Distances
 """calculate the distance matrix from the provided metric. Then, for every point, take its least n distances and add them to a total. Return the total."""
 function diversity_metric(swarm::Swarm; metric::Distances.PreMetric=Distances.Euclidean(), n::Int=3)

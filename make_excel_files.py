@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('ds12_summary.xlsx')
+workbook = xlsxwriter.Workbook('popbench.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -216,6 +216,32 @@ def full_results(worksheet, files):
         i += 18
         j = 0
 
+def popgen_benchmarks(worksheet, files):
+    i = 0
+    j = 0
+    categories = ["time", "n_solutions", "diversity", "best_score", "worst_score"]
+    for file, ds in files:
+        print("making: " + file)
+        results = json.loads(open("results/" + file, "r").read())
+        worksheet.write(i, j, str(file), title_format)
+        i += 1
+        base_level = i
+        for method in results:
+            worksheet.write(i, j, method, title_format)
+            i += 1
+            for category in categories:
+                worksheet.write(i, j, category, title_format)
+                for result in results[method]:
+                    i += 1
+                    worksheet.write(i, j, result[category])
+                i = base_level + 1
+                j += 1
+            j += 2
+            i = base_level
+        j = 0
+        i += 95
+
+
 def _manhattan_distance(a, b):
     total = 0
     for i in range(len(a)):
@@ -288,29 +314,18 @@ def similarity_matrixes(worksheet, files, hit_list=None):
             for (l, otheralg) in enumerate(alg_list):
                 worksheet.write(i+k, j+l, matrix[alg][otheralg])
 
-hybrid_files = [("hybrid_order/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+hybrid_files = [("hybrid_60s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 5)]
 
-solo_30s_files = [("article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
-
-
-
-solo_5s_files = [("fast_article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
-
+PopGen = workbook.add_worksheet("Population Generation")
 # Brok = workbook.add_worksheet("Wrong Optimals")
-HybFulRes = workbook.add_worksheet("Hybrid 30s Results")
-HybSum = workbook.add_worksheet("Hybrid 30s Summary")
-SolFulRes60 = workbook.add_worksheet("Solo 30s Results")
-SolSum60 = workbook.add_worksheet("Solo 30s Summary")
-SolFulRes3 = workbook.add_worksheet("Solo 5s Results")
-SolSum3 = workbook.add_worksheet("Solo 5s Summary")
+# HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
+# HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 
-# wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
-only_percentages(HybSum, hybrid_files)
-full_results(HybFulRes, hybrid_files)
-only_percentages(SolSum3, solo_5s_files)
-full_results(SolFulRes3, solo_5s_files)
-only_percentages(SolSum60, solo_30s_files)
-full_results(SolFulRes60, solo_30s_files)
+popgen_benchmarks(PopGen, popgen_files)
+# wrong_results(Brok, hybrid_files)
+# only_percentages(HybSum, hybrid_files)
+# full_results(HybFulRes, hybrid_files)
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
