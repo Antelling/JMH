@@ -1,14 +1,15 @@
 using StatsBase: sample
 
-function GA_monad(; repair_op::Function=VSRO, n_parents=2, n_generations=200, local_search::Function=identity)
-    return function GA_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        return GA(swarm, problem, repair_op=repair_op, n_parents=n_parents,
+function PGA_monad(; repair_op::Function=VSRO, n_parents=2, n_generations=200, local_search::Function=identity)
+    return function PGA_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
+        return PGA(swarm, problem, repair_op=repair_op, n_parents=n_parents,
                 n_generations=n_generations, verbose=verbose,
                 local_search=local_search)
     end
 end
 
-function GA(swarm::Swarm, problem::ProblemInstance;
+"""Probabilistic GA"""
+function PGA(swarm::Swarm, problem::ProblemInstance;
         repair_op::Function=VSRO,
         local_search::Function=identity,
         verbose::Int=0,
@@ -135,7 +136,7 @@ function IGA(swarm::Swarm, problem::ProblemInstance;
 end
 
 
-function CGA_monad(; repair_op::Function=VSRO, attempts::Int=200, local_search::Function=identity)
+function TGA_monad(; repair_op::Function=VSRO, attempts::Int=200, local_search::Function=identity)
     return function CGA_monad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
         return IGA(swarm, problem, repair_op=repair_op,
                 attempts=attempts, verbose=verbose,
@@ -143,9 +144,9 @@ function CGA_monad(; repair_op::Function=VSRO, attempts::Int=200, local_search::
     end
 end
 
-"""Classic Genetic Algorithm
+"""Traditional Genetic Algorithm
 """
-function CGA(swarm::Swarm, problem::ProblemInstance;
+function TGA(swarm::Swarm, problem::ProblemInstance;
         repair_op::Function=VSRO,
         local_search::Function=identity,
         verbose::Int=0,

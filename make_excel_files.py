@@ -2,11 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-<<<<<<< HEAD
 workbook = xlsxwriter.Workbook('popbench.xlsx')
-=======
-workbook = xlsxwriter.Workbook('hybrids.xlsx')
->>>>>>> 655e9f07373887f4d5fc2dfe1747d2cc63ae62e3
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -319,33 +315,28 @@ def similarity_matrixes(worksheet, files, hit_list=None):
                 worksheet.write(i+k, j+l, matrix[alg][otheralg])
 
 hybrid_files = [("hybrid_60s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
-<<<<<<< HEAD
-popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 5)]
-=======
-
-solo_30s_files = [("article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
-
-solo_5s_files = [("fast_article_results/" + str(i) + ".json", str(i)) for i in range(1, 10)]
->>>>>>> 655e9f07373887f4d5fc2dfe1747d2cc63ae62e3
+brok_files = [
+    # hybrid_files[0],
+    # hybrid_files[1],
+    # hybrid_files[2],
+    # hybrid_files[3],
+    hybrid_files[4],
+    # hybrid_files[5],
+    # hybrid_files[6],
+    hybrid_files[7],
+    hybrid_files[8],
+]
+popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
 PopGen = workbook.add_worksheet("Population Generation")
-# Brok = workbook.add_worksheet("Wrong Optimals")
-<<<<<<< HEAD
+Brok = workbook.add_worksheet("Wrong Optimals")
 # HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 
 popgen_benchmarks(PopGen, popgen_files)
-# wrong_results(Brok, hybrid_files)
+wrong_results(Brok, brok_files)
 # only_percentages(HybSum, hybrid_files)
 # full_results(HybFulRes, hybrid_files)
-=======
-HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
-HybSum = workbook.add_worksheet("Hybrid 60s Summary")
-
-# wrong_results(Brok, [hybrid_files[4], hybrid_files[6], hybrid_files[7], hybrid_files[8]])
-only_percentages(HybSum, hybrid_files)
-full_results(HybFulRes, hybrid_files)
->>>>>>> 655e9f07373887f4d5fc2dfe1747d2cc63ae62e3
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
