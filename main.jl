@@ -21,7 +21,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = "results/default_10s/"
 
 function main(;verbose::Int=0)
-	for dataset in 1:9
+	for dataset in 1:3
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_pop30_ls.json")
 		if verbose > 0
