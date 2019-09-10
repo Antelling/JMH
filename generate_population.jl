@@ -30,7 +30,7 @@ function main(;verbose::Int=0)
 			println("")
 	        println("testing problem #$(problem.index)")
 
-	        swarm = greedy_construct(problem, 30, repair_op=VSRO, verbose=1, max_attempts=500_000)
+	        swarm = greedy_construct(problem, 30, repair_op=VSRO, verbose=1, max_time=30, max_attempts=1000000000)
 
 			push!(results, swarm)
 		end
