@@ -20,7 +20,9 @@ it fails n_fails times in a row."""
 function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fails::Int=5, verbose=0, time_limit=time_limit)
 
     failed_steps = 0
+	total_steps = 0
     prev_best_score = 0
+	improvement_points = Vector{Tuple{Int,Int}}()
 
     if verbose >= 2
         print("starting search with $(alg) algorithm")
@@ -29,10 +31,11 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 
 	start_time = time()
     while failed_steps < n_fails && time() - start_time < time_limit
+		total_steps += 1
 		if verbose >= 2
 			print("$(failed_steps) ")
+			assert_no_duplicates(swarm)
 		end
-		assert_no_duplicates(swarm)
         swarm, best_score = alg(swarm, problem, verbose=verbose-1)
 
 		best_score = total_score(swarm, problem) #we look at the swarm as a whole, instead of
@@ -45,11 +48,14 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 			@assert best_score == find_best_score(swarm, problem)
 			assert_no_duplicates(swarm)
 		end
+
         if best_score > prev_best_score
             if verbose >= 3
                 println("")
                 print("new best score: $(best_score)")
             end
+			best_solution_score = score_solution(find_best_solution(swarm, problem), problem)
+			push!(improvement_points, (total_steps, best_solution_score))
             failed_steps = 0
             prev_best_score = best_score
         else
@@ -70,7 +76,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
 	    end
 		@assert prev_best_score == find_best_score(swarm, problem)
 	end
-    return (swarm, find_best_score(swarm, problem))
+    return (swarm, find_best_score(swarm, problem), improvement_points)
 end
 
 """returns a configured triplicate instance"""

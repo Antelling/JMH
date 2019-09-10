@@ -20,6 +20,16 @@ using Dates: today
 const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = "results/default_10s/"
 
+ImprovementPoints = Vector{Tuple{Int,Int}}
+
+struct ResultSet
+	score::Int,
+	time::Float64,
+	diversity::Float64,
+	bitlist::String,
+	improvement_points::ImprovementPoints
+end
+
 function main(;verbose::Int=0)
 	for dataset in 1:3
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
@@ -37,29 +47,9 @@ function main(;verbose::Int=0)
 
 			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), "jaya"),
 			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), "rao1"),
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=rao2_perturb), time_limit=time_limit, n_fails=n_fails), "rao2"),
-			(iterate_monad(TBO_monad(top_n=1), time_limit=time_limit, n_fails=n_fails), "TBO"),
-			(iterate_monad(CBO_monad(bottom_n=1), n_fails=n_fails, time_limit=time_limit), "C1"),
-			(iterate_monad(LBO_monad(), n_fails=n_fails, time_limit=time_limit), "LBO"),
-			(iterate_monad(TLBO_monad(), n_fails=n_fails, time_limit=time_limit), "TLBO"),
-			(iterate_monad(PGA_monad(n_parents=2, local_search=identity)), "PGA"),
-			(iterate_monad(TGA_monad(local_search=identity)), "CGA"),
-			(iterate_monad(IGA_monad(max_parents=2, local_search=identity)), "IGA"),
-
-
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "jaya_ls"),
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao1_ls"),
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=rao2_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao2_ls"),
-			(iterate_monad(TBO_monad(local_search=VND, top_n=1), time_limit=time_limit, n_fails=n_fails), "TBO_ls"),
-			(iterate_monad(CBO_monad(local_search=VND, bottom_n=1), n_fails=n_fails, time_limit=time_limit), "C1_ls"),
-			(iterate_monad(LBO_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "LBO_ls"),
-			(iterate_monad(TLBO_monad(local_search=VND), n_fails=n_fails, time_limit=time_limit), "TLBO_ls"),
-			(iterate_monad(PGA_monad(n_parents=2, local_search=VND)), "PGA_ls"),
-			(iterate_monad(TGA_monad(local_search=VND)), "CGA_ls"),
-			(iterate_monad(IGA_monad(max_parents=2, local_search=VND)), "IGA_ls"),
 		]
 
-		results = Dict{String,Vector{Tuple{Int,Float64,Float64,String}}}()
+		results = Dict{String,Vector{ResultSet}}()
 		try
 			results = JSON.parsefile(results_dir * "$(dataset).json")
 		catch SystemError
@@ -81,8 +71,9 @@ function main(;verbose::Int=0)
 			for (alg, name) in algorithms
 				diversity = 0
 				start_time = time_ns()
-				if length(swarm) > 29
-	            	newswarm, best_score = alg(deepcopy(swarm), problem)
+				improvement_points = ImprovementPoints()
+				if length(swarm) > 2
+	            	newswarm, best_score, improvement_points = alg(deepcopy(swarm), problem)
 					if length(swarm) > 4
 						diversity = diversity_metric(newswarm)
 					end

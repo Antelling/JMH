@@ -219,19 +219,44 @@ def full_results(worksheet, files):
 def popgen_benchmarks(worksheet, files):
     i = 0
     j = 0
-    categories = ["time", "n_solutions", "diversity", "best_score", "worst_score"]
+    categories = ["time", "n_solutions", "diversity", "best_score", "worst_score", "optimal_score", "best_deviation_percent"]
     for file, ds in files:
         print("making: " + file)
         results = json.loads(open("results/" + file, "r").read())
+
+        #we add the optimal score and optimal deviation to this object
+        #we also rearrange the problems to be case first instead of instance first
+        new_results = {}
+        for method in results:
+            new_results[method] = []
+        for p in range(6):
+            mask = list(range(p, 90, 6))
+            opts = [optimals[ds][m] for m in mask]
+            for method in results:
+                data = [results[method][m] for m in mask]
+                for k in range(len(data)):
+                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["best_score"])/opts[k])
+                    data[k]["best_deviation_percent"] = percent
+                    data[k]["optimal_score"] =  opts[k]
+                    new_results[method].append(data[k])
+
         worksheet.write(i, j, str(file), title_format)
+
+        method_descriptions = {
+            "repair_results": "attempt to repair every infeasible solution generated, keep successfully repaired feasible results",
+            "vnd_repair_results": "same as repair_results, but after a potential solution is found, run a VND search then ensure it is still a unique solution",
+            "plain_results": "discard infeasible results without attempting a repair"
+        }
+
         i += 1
         base_level = i
-        for method in results:
+        for method in new_results:
             worksheet.write(i, j, method, title_format)
+            worksheet.write(i, j+1, method_descriptions[method])
             i += 1
             for category in categories:
                 worksheet.write(i, j, category, title_format)
-                for result in results[method]:
+                for result in new_results[method]:
                     i += 1
                     worksheet.write(i, j, result[category])
                 i = base_level + 1
@@ -315,6 +340,7 @@ def similarity_matrixes(worksheet, files, hit_list=None):
                 worksheet.write(i+k, j+l, matrix[alg][otheralg])
 
 hybrid_files = [("hybrid_60s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+default_files = [("default_10s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 brok_files = [
     # hybrid_files[0],
     # hybrid_files[1],
@@ -328,15 +354,17 @@ brok_files = [
 ]
 popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
-PopGen = workbook.add_worksheet("Population Generation")
-Brok = workbook.add_worksheet("Wrong Optimals")
-# HybFulRes = workbook.add_worksheet("Hybrid 60s Results")
+IniPop = workbook.add_worksheet("Initial Population Statistics")
+# DefSum = workbook.add_worksheet("Default Parameters Summary 10s")
+# DefFul = workbook.add_worksheet("Default Parameters Results 10s")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
+# HybFul = workbook.add_worksheet("Hybrid 60s Results")
 
-popgen_benchmarks(PopGen, popgen_files)
-wrong_results(Brok, brok_files)
+popgen_benchmarks(IniPop, popgen_files)
 # only_percentages(HybSum, hybrid_files)
-# full_results(HybFulRes, hybrid_files)
+# full_results(HybFul, hybrid_files)
+# only_percentages(DefSum, default_files)
+# full_results(DefFul, default_files)
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])

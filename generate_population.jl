@@ -30,11 +30,11 @@ function main(;verbose::Int=0)
 			println("")
 	        println("testing problem #$(problem.index)")
 
-	        swarm = greedy_construct(problem, 30, repair_op=VSRO, local_search=VND, verbose=1, max_attempts=500_000)
+	        swarm = greedy_construct(problem, 30, repair_op=VSRO, verbose=1, max_attempts=500_000)
 
 			push!(results, swarm)
 		end
-		open(results_dir * "$(dataset)_pop30_ls.json", "w") do f
+		open(results_dir * "$(dataset)_pop30.json", "w") do f
 			write(f, JSON.json(results))
 		end
 	end
