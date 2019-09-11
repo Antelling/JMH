@@ -21,7 +21,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = problems_dir
 
 function main(;verbose::Int=0)
-	for dataset in [9]
+	for dataset in 1:9
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 
 		results = Vector{Vector{BitList}}()
