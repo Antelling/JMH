@@ -18,11 +18,10 @@ end
 """Will apply the passed algorithm function to the swarm over and over until
 it fails n_fails times in a row."""
 function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fails::Int=5, verbose=0, time_limit=time_limit)
-
     failed_steps = 0
 	total_steps = 0
     prev_best_score = 0
-	improvement_points = Vector{Tuple{Int,Int}}()
+	improvement_points = ImprovementPoints()
 
     if verbose >= 2
         print("starting search with $(alg) algorithm")
@@ -55,7 +54,7 @@ function iterate_alg(alg::Function, swarm::Swarm, problem::ProblemInstance; n_fa
                 print("new best score: $(best_score)")
             end
 			best_solution_score = score_solution(find_best_solution(swarm, problem), problem)
-			push!(improvement_points, (total_steps, best_solution_score))
+			push!(improvement_points, (total_steps, best_score, best_solution_score))
             failed_steps = 0
             prev_best_score = best_score
         else
@@ -165,5 +164,5 @@ end
 
 """control function for micah's statistics"""
 function control(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-	return (swarm, find_best_score(swarm, problem))
+	return (swarm, find_best_score(swarm, problem), ImprovementPoints())
 end

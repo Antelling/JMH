@@ -40,7 +40,9 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO,
             end
         end
     end
-    return (swarm, best_score)
+    improvement_points = ImprovementPoints()
+    push!(improvement_points, (1, best_score))
+    return (swarm, best_score, improvement_points)
 end
 
 

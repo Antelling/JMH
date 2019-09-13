@@ -13,7 +13,10 @@ function swarm_local_swap(swarm::Swarm, problem::ProblemInstance; verbose::Int=0
             swarm[i] = new_sol
         end
     end
-    return (swarm, find_best_score(swarm, problem))
+    improvement_points = ImprovementPoints()
+    best_score = find_best_score(swarm, problem)
+    push!(improvement_points, (1, best_score))
+    return (swarm, best_score, improvement_points)
 end
 
 function local_swap(sol::BitList, problem::ProblemInstance; verbose::Int=0)
@@ -139,7 +142,10 @@ function swarm_local_flip(swarm::Swarm, problem::ProblemInstance; verbose::Int=0
             swarm[i] = new_sol
         end
     end
-    return (swarm, find_best_score(swarm, problem))
+    improvement_points = ImprovementPoints()
+    best_score = find_best_score(swarm, problem)
+    push!(improvement_points, (1, best_score))
+    return (swarm, best_score, improvement_points)
 end
 
 function local_flip(sol::BitList, problem::ProblemInstance; verbose::Int=0)
@@ -201,7 +207,11 @@ function swarm_VND(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
             swarm[i] = new_sol
         end
     end
-    return (swarm, find_best_score(swarm, problem))
+
+    improvement_points = ImprovementPoints()
+    best_score = find_best_score(swarm, problem)
+    push!(improvement_points, (1, best_score))
+    return (swarm, best_score, improvement_points)
 end
 
 function VND(sol::BitList, problem::ProblemInstance; verbose::Int=0)

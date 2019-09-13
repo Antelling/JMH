@@ -18,35 +18,43 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const results_dir = "results/default_10s/"
-
-ImprovementPoints = Vector{Tuple{Int,Int}}
+const results_dir = "results/test/"
+const initial_pop_dir_suffix = "pop30"
 
 struct ResultSet
-	score::Int,
-	time::Float64,
-	diversity::Float64,
-	bitlist::String,
+	score::Int
+	time::Float64
+	diversity::Float64
+	bitlist::String
 	improvement_points::ImprovementPoints
 end
 
 function main(;verbose::Int=0)
 	for dataset in 1:3
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
-		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_pop30_ls.json")
+		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_$(initial_pop_dir_suffix).json")
 		if verbose > 0
 			ps = "$(problems)"
 		end
 		n_fails = 50
 		time_limit = 10
 
-
-
 		algorithms = [
 			(control_monad(), "control"),
-
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), "jaya"),
-			(iterate_monad(jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), "rao1"),
+			(VND_monad(), "VND"),
+			(LF_monad(), "LF"),
+			(iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), "jaya"),
+			(iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), "rao1"),
+			(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "jaya[VND]"),
+			(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao1[VND]"),
+			(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=LF), time_limit=time_limit, n_fails=n_fails), "jaya[LF]"),
+			(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=LF), time_limit=time_limit, n_fails=n_fails), "rao1[LF]"),
+			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), VND_monad()], time_limit=time_limit), "jaya&VND"),
+			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), VND_monad()], time_limit=time_limit), "rao1&VND"),
+			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), LF_monad()], time_limit=time_limit), "jaya&LF"),
+			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), LF_monad()], time_limit=time_limit), "rao1&LF"),
+			(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "jaya-->VND"),
+			(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "rao1-->VND")
 		]
 
 		results = Dict{String,Vector{ResultSet}}()
@@ -95,7 +103,9 @@ function main(;verbose::Int=0)
 				#we also want to replace the swarm with a string of 0 and 1
 				newswarm = [(reduce(*, [x ? "1" : "0" for x in s]), score_solution(s, problem)) for s in newswarm]
 				sort!(newswarm, by=x->x[2])
-	            push!(results[name], (best_score, elapsed_time, diversity, join(newswarm, ",")))
+
+				result_set = ResultSet(best_score,elapsed_time,diversity,join(newswarm, ","),improvement_points)
+	            push!(results[name], result_set)
 			end
 
 			open(results_dir * "$(dataset).json", "w") do f

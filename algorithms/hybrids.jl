@@ -17,6 +17,7 @@ end
 function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInstance;
 			verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
 	cont = true
+	improvement_points = ImprovementPoints()
 	start_time = time()
 	while cont
 		for alg in algs
@@ -24,66 +25,33 @@ function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInst
 				cont = false
 				break
 			end
-			swarm, current_score = alg(swarm, problem, verbose=verbose-1)
+			tries = length(improvement_points) > 0 ? improvement_points[end][1] : 0
+			swarm, current_score, local_improvement_points = alg(swarm, problem, verbose=verbose-1)
+			local_improvement_points = [(lip[1], lip[2] + tries, lip[3]) for lip in local_improvement_points]
+			append!(improvement_points, local_improvement_points)
 		end
 	end
-	return (swarm, find_best_score(swarm, problem))
+	return (swarm, find_best_score(swarm, problem), improvement_points)
 end
 
 function skate_monad(algs::Vector{Function}; verbose::Int=0, n_fails::Int=5, time_limit::Int=60)
-	return function skate_monad(swarm::Swarm, problem::ProblemInstance)
-        return skate_hybrid(algs, swarm, problem, verbose=verbose, n_fails=n_fails, time_limit=time_limit)
+	return function skate_monad_internal(swarm::Swarm, problem::ProblemInstance)
+        a, b, c = skate_hybrid(algs, swarm, problem, verbose=verbose, n_fails=n_fails, time_limit=time_limit)
+		return (a, b, c)
     end
 end
 
 function ordered_applicator_monad(algs::Vector)
 	return function ordered_applicator(swarm::Swarm, problem::ProblemInstance)
 		best = 0
+		improvement_points = ImprovementPoints()
+		tries = 0
         for alg in algs
-			swarm, best = alg(swarm, problem)
+			tries = length(improvement_points) > 0 ? improvement_points[end][1] : 0
+			swarm, best, local_improvement_points = alg(swarm, problem)
+			local_improvement_points = [(lip[1], lip[2] + tries, lip[3]) for lip in local_improvement_points]
+			append!(improvement_points, local_improvement_points)
 		end
-		return (swarm, best)
+		return (swarm, best, improvement_points)
     end
-end
-
-function TLGJ_monad(;prob::Bool=true, repair_op::Function=VSRO)
-    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose)[1]
-        swarm = LBO(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
-		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
-		return jaya(swarm, problem, repair_op=repair_op, verbose=verbose)
-    end
-end
-
-function GJTL_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
-    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
-		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
-        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
-        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
-    end
-end
-
-function G2JG4TL_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity)
-    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, n_parents=2)[1]
-		swarm = jaya(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
-		swarm = GA(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, n_parents=4)[1]
-        swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op, verbose=verbose, local_search=local_search)[1]
-        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search)
-    end
-end
-
-function VND_TLBO_monad(;repair_op::Function=VSRO)
-    return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-		swarm = VND(swarm, problem, repair_op=repair_op, verbose=verbose)[1]
-		return TLBO(swarm, problem, repair_op=repair_op, verbose=verbose)
-    end
-end
-
-function final(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
-	swarm = iterate_monad(TBO_monad(top_n=15, local_search=identity), n_fails=5, time_limit=3)(swarm, problem)[1]
-	swarm = iterate_monad(GA_monad(n_parents=3, local_search=identity), n_fails=10, time_limit=6)(swarm, problem)[1]
-	swarm = BF_VND(swarm, problem, n_branches=3)[1]
-	return iterate_monad(GA_monad(n_parents=2, local_search=VND), n_fails=10, time_limit=6)(swarm, problem)
 end
