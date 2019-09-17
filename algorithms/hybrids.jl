@@ -19,6 +19,8 @@ function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInst
 	cont = true
 	improvement_points = ImprovementPoints()
 	start_time = time()
+	swarm_total_score = total_score(swarm, problem)
+	failed_attempts = 0
 	while cont
 		for alg in algs
 			if time() - start_time > time_limit
@@ -29,6 +31,18 @@ function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInst
 			swarm, current_score, local_improvement_points = alg(swarm, problem, verbose=verbose-1)
 			local_improvement_points = [(lip[1] + tries, lip[2], lip[3]) for lip in local_improvement_points]
 			append!(improvement_points, local_improvement_points)
+
+			current_total_score = total_score(swarm, problem)
+			if current_total_score > swarm_total_score
+				failed_attempts = 0
+				swarm_total_score = current_total_score
+			else
+				failed_attempts += 1
+			end
+			if failed_attempts >= n_fails
+				cont = false
+				break
+			end
 		end
 	end
 	return (swarm, find_best_score(swarm, problem), improvement_points)

@@ -44,15 +44,15 @@ function main(;verbose::Int=0)
 		(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao1[VND]"),
 		(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=local_flip), time_limit=time_limit, n_fails=n_fails), "jaya[LF]"),
 		(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=local_flip), time_limit=time_limit, n_fails=n_fails), "rao1[LF]"),
-		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), VND_monad()], time_limit=time_limit), "jaya&VND"),
-		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), VND_monad()], time_limit=time_limit), "rao1&VND"),
-		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), LF_monad()], time_limit=time_limit), "jaya&LF"),
-		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), LF_monad()], time_limit=time_limit), "rao1&LF"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), VND_monad()], time_limit=time_limit, n_fails=n_fails), "jaya&VND"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), VND_monad()], time_limit=time_limit, n_fails=n_fails), "rao1&VND"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), LF_monad()], time_limit=time_limit, n_fails=n_fails), "jaya&LF"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), LF_monad()], time_limit=time_limit, n_fails=n_fails), "rao1&LF"),
 		(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "jaya-->VND"),
 		(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "rao1-->VND")
 	]
 
-	for dataset in 1:6
+	for dataset in 1:4
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_$(initial_pop_dir_suffix).json")
 
