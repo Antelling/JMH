@@ -15,7 +15,7 @@ function swarm_local_swap(swarm::Swarm, problem::ProblemInstance; verbose::Int=0
     end
     improvement_points = ImprovementPoints()
     best_score = find_best_score(swarm, problem)
-    push!(improvement_points, (1, best_score))
+    push!(improvement_points, (1, total_score(swarm, problem), best_score))
     return (swarm, best_score, improvement_points)
 end
 
@@ -41,6 +41,10 @@ function _individual_swap(sol::BitList, problem::ProblemInstance)
             for j in 1:length(sol)
                 if !sol[j]
                     valid = true
+                    new_objective_value = objective_value - problem.objective[i] + problem.objective[j]
+                    if new_objective_value <= best_found_objective
+                        continue
+                    end
                     for p in 1:length(problem.upper_bounds)
                         changed_value = upper_values[p] - problem.upper_bounds[p][1][i] + problem.upper_bounds[p][1][j]
                         if changed_value > problem.upper_bounds[p][2]
@@ -58,74 +62,17 @@ function _individual_swap(sol::BitList, problem::ProblemInstance)
                         end
                     end
                     if valid
-                        new_objective_value = objective_value - problem.objective[i] + problem.objective[j]
-                        if new_objective_value > best_found_objective
-                            best_found_objective = new_objective_value
-                            best_found_solution = deepcopy(sol)
-                            best_found_solution[i] = false
-                            best_found_solution[j] = true
-                        end
+                        #we know objective function has improved
+                        best_found_objective = new_objective_value
+                        best_found_solution = deepcopy(sol)
+                        best_found_solution[i] = false
+                        best_found_solution[j] = true
                     end
                 end
             end
         end
     end
     return best_found_solution
-end
-
-function _slow_individual_swap(sol::BitList, problem::ProblemInstance; only_best::Bool=true)
-    objective_value = sum(problem.objective .* sol)
-    upper_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.upper_bounds]
-    lower_values::Vector{Int} = [sum(sol .* bound[1]) for bound in problem.lower_bounds]
-
-    best_found_objective = objective_value
-    best_found_solution::BitList = deepcopy(sol)
-
-    discovered_feasible::Vector{Tuple{BitList,Int}} = []
-    starting_value = score_solution(sol, problem)
-    push!(discovered_feasible, tuple(sol, starting_value))
-    for i in 1:length(sol)
-        if sol[i] #find something in the sack
-            for j in 1:length(sol)
-                if !sol[j] #find an item out of the sack
-                    valid = true
-                    #check feasibility of this swap for every upper bound
-                    for p in 1:length(problem.upper_bounds)
-                        changed_value = upper_values[p] - problem.upper_bounds[p][1][i] + problem.upper_bounds[p][1][j]
-                        if changed_value > problem.upper_bounds[p][2]
-                            valid = false
-                            break
-                        end
-                    end
-                    if valid
-                        #check feasibility of this swap for every lower bound
-                        for p in 1:length(problem.lower_bounds)
-                            changed_value = lower_values[p] - problem.lower_bounds[p][1][i] + problem.lower_bounds[p][1][j]
-                            if changed_value < problem.lower_bounds[p][2]
-                                valid = false
-                                break
-                            end
-                        end
-                    end
-                    if valid
-                        new_objective_value = objective_value - problem.objective[i] + problem.objective[j]
-                        if new_objective_value >= starting_value
-                            best_found_solution = deepcopy(sol) #copy the solution and apply the transform
-                            best_found_solution[i] = false
-                            best_found_solution[j] = true
-                            push!(discovered_feasible, tuple(best_found_solution, new_objective_value))
-                        end
-                    end
-                end
-            end
-        end
-    end
-    sort!(discovered_feasible, by=i->i[1])
-    if only_best
-        return discovered_feasible[end][1]
-    else
-        return [a[1] for a in discovered_feasible]
-    end
 end
 
 function LF_monad()
@@ -144,7 +91,7 @@ function swarm_local_flip(swarm::Swarm, problem::ProblemInstance; verbose::Int=0
     end
     improvement_points = ImprovementPoints()
     best_score = find_best_score(swarm, problem)
-    push!(improvement_points, (1, best_score))
+    push!(improvement_points, (1, total_score(swarm, problem), best_score))
     return (swarm, best_score, improvement_points)
 end
 
@@ -167,8 +114,13 @@ function _individual_flip(sol::BitList, problem::ProblemInstance)
     best_found_solution::BitList = sol
     for i in 1:length(sol)
         valid = true
-
         on_or_off = sol[i] ? -1 : 1
+
+        new_objective_value = objective_value + (problem.objective[i] * on_or_off)
+        if new_objective_value <= best_found_objective
+            continue
+        end
+
         for p in 1:length(problem.upper_bounds)
             changed_value = upper_values[p] + (problem.upper_bounds[p][1][i] * on_or_off)
             if changed_value > problem.upper_bounds[p][2]
@@ -188,12 +140,11 @@ function _individual_flip(sol::BitList, problem::ProblemInstance)
         end
 
         if valid
-            new_objective_value = objective_value + (problem.objective[i] * on_or_off)
-            if new_objective_value > best_found_objective
-                best_found_objective = new_objective_value
-                best_found_solution = deepcopy(sol)
-                best_found_solution[i] = !best_found_solution[i]
-            end
+            #we know the objective value has improved because we would have quit
+            #otherwise
+            best_found_objective = new_objective_value
+            best_found_solution = deepcopy(sol)
+            best_found_solution[i] = !best_found_solution[i]
         end
     end
     return best_found_solution
@@ -210,7 +161,7 @@ function swarm_VND(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
 
     improvement_points = ImprovementPoints()
     best_score = find_best_score(swarm, problem)
-    push!(improvement_points, (1, best_score))
+    push!(improvement_points, (1, total_score(swarm, problem), best_score))
     return (swarm, best_score, improvement_points)
 end
 

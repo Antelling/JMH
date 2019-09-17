@@ -27,7 +27,7 @@ function skate_hybrid(algs::Vector{Function}, swarm::Swarm, problem::ProblemInst
 			end
 			tries = length(improvement_points) > 0 ? improvement_points[end][1] : 0
 			swarm, current_score, local_improvement_points = alg(swarm, problem, verbose=verbose-1)
-			local_improvement_points = [(lip[1], lip[2] + tries, lip[3]) for lip in local_improvement_points]
+			local_improvement_points = [(lip[1] + tries, lip[2], lip[3]) for lip in local_improvement_points]
 			append!(improvement_points, local_improvement_points)
 		end
 	end
@@ -49,7 +49,7 @@ function ordered_applicator_monad(algs::Vector)
         for alg in algs
 			tries = length(improvement_points) > 0 ? improvement_points[end][1] : 0
 			swarm, best, local_improvement_points = alg(swarm, problem)
-			local_improvement_points = [(lip[1], lip[2] + tries, lip[3]) for lip in local_improvement_points]
+			local_improvement_points = [(lip[1] + tries, lip[2], lip[3]) for lip in local_improvement_points]
 			append!(improvement_points, local_improvement_points)
 		end
 		return (swarm, best, improvement_points)

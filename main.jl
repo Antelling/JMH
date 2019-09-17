@@ -18,8 +18,11 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const results_dir = "results/test/"
-const initial_pop_dir_suffix = "pop30"
+const n_fails = 50
+const time_limit = 10
+const initial_pop_dir_suffix = "pop30_ls"
+const results_dir = "results/rao_compare_$(time_limit)s_$(n_fails)f_$initial_pop_dir_suffix/"
+run(`mkdir -p $(results_dir)`)
 
 struct ResultSet
 	score::Int
@@ -30,32 +33,28 @@ struct ResultSet
 end
 
 function main(;verbose::Int=0)
-	for dataset in 1:3
+
+	algorithms = [
+		(control_monad(), "control"),
+		(VND_monad(), "VND"),
+		(LF_monad(), "LF"),
+		(iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), "jaya"),
+		(iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), "rao1"),
+		(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "jaya[VND]"),
+		(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao1[VND]"),
+		(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=local_flip), time_limit=time_limit, n_fails=n_fails), "jaya[LF]"),
+		(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=local_flip), time_limit=time_limit, n_fails=n_fails), "rao1[LF]"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), VND_monad()], time_limit=time_limit), "jaya&VND"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), VND_monad()], time_limit=time_limit), "rao1&VND"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), LF_monad()], time_limit=time_limit), "jaya&LF"),
+		(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), LF_monad()], time_limit=time_limit), "rao1&LF"),
+		(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "jaya-->VND"),
+		(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "rao1-->VND")
+	]
+
+	for dataset in 1:6
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 		populations::Vector{Vector{BitList}} = JSON.parsefile(problems_dir * "$(dataset)_$(initial_pop_dir_suffix).json")
-		if verbose > 0
-			ps = "$(problems)"
-		end
-		n_fails = 50
-		time_limit = 10
-
-		algorithms = [
-			(control_monad(), "control"),
-			(VND_monad(), "VND"),
-			(LF_monad(), "LF"),
-			(iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), "jaya"),
-			(iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), "rao1"),
-			(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "jaya[VND]"),
-			(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=VND), time_limit=time_limit, n_fails=n_fails), "rao1[VND]"),
-			(iterate_monad(jaya_monad(perturb=jaya_perturb, local_search=LF), time_limit=time_limit, n_fails=n_fails), "jaya[LF]"),
-			(iterate_monad(jaya_monad(perturb=rao1_perturb, local_search=LF), time_limit=time_limit, n_fails=n_fails), "rao1[LF]"),
-			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), VND_monad()], time_limit=time_limit), "jaya&VND"),
-			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), VND_monad()], time_limit=time_limit), "rao1&VND"),
-			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=jaya_perturb), LF_monad()], time_limit=time_limit), "jaya&LF"),
-			(skate_monad([jaya_monad(top_n=1, bottom_n=1, perturb=rao1_perturb), LF_monad()], time_limit=time_limit), "rao1&LF"),
-			(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=jaya_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "jaya-->VND"),
-			(ordered_applicator_monad([iterate_monad(jaya_monad(perturb=rao1_perturb), time_limit=time_limit, n_fails=n_fails), VND_monad()]), "rao1-->VND")
-		]
 
 		results = Dict{String,Vector{ResultSet}}()
 		try
@@ -108,18 +107,13 @@ function main(;verbose::Int=0)
 	            push!(results[name], result_set)
 			end
 
-			open(results_dir * "$(dataset).json", "w") do f
-	       		write(f, JSON.json(results, 4))
-	    	end
-
 			if verbose > 0
 				@assert p == "$(problem)"
 			end
-
 		end
 
-		if verbose > 0
-			@assert ps == "$(problems)"
+		open(results_dir * "$(dataset).json", "w") do f
+			write(f, JSON.json(results, 4))
 		end
 	end
 end
