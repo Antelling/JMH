@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('popbench.xlsx')
+workbook = xlsxwriter.Workbook('rao_comp.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -48,11 +48,11 @@ def only_percentages(worksheet, files):
                 times = []
                 diversities = []
                 for k in range(len(data)):
-                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k][0])/opts[k])
+                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
                     worksheet.write(i+2+k, j, percent)
                     percentages.append(percent)
-                    times.append(data[k][1])
-                    diversities.append(data[k][2])
+                    times.append(data[k]["time"])
+                    diversities.append(data[k]["diversity"])
                 worksheet.write(i+2+len(data)+1, j, mean(percentages), title_format)
                 if not alg in alg_percentage_results:
                     alg_percentage_results[alg] = []
@@ -193,17 +193,17 @@ def full_results(worksheet, files):
                 diversities = []
                 times = []
                 for k in range(len(data)):
-                    worksheet.write(i+2+k, j, data[k][0])
-                    scores.append(data[k][0])
-                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k][0])/opts[k])
+                    worksheet.write(i+2+k, j, data[k]["score"])
+                    scores.append(data[k]["score"])
+                    percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
                     worksheet.write(i+2+k, j+1, percent, negative_format if percent < 0 else normal_format)
                     percentages.append(percent)
-                    worksheet.write(i+2+k, j+2, data[k][1])
-                    times.append(data[k][1])
-                    worksheet.write(i+2+k, j+3, data[k][2])
-                    diversities.append(data[k][2])
+                    worksheet.write(i+2+k, j+2, data[k]["time"])
+                    times.append(data[k]["time"])
+                    worksheet.write(i+2+k, j+3, data[k]["diversity"])
+                    diversities.append(data[k]["diversity"])
                     try:
-                        worksheet.write(i+2+k, j+4, parse_swarm(data[k][3])[-1][0], bitstring_format)
+                        worksheet.write(i+2+k, j+4, parse_swarm(data[k]["bitlist"])[-1][0], bitstring_format)
                     except IndexError:
                         pass
                 worksheet.write(i+2+len(data)+1, j-1, "averages:", title_format)
@@ -341,6 +341,8 @@ def similarity_matrixes(worksheet, files, hit_list=None):
 
 hybrid_files = [("hybrid_60s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 default_files = [("default_10s/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+rao_compare_pop30 = [("rao_compare_10s_50f_pop30/" + str(i) + ".json", str(i)) for i in range(1, 10)]
+rao_compare_pop30ls = [("rao_compare_10s_50f_pop30_ls/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 brok_files = [
     # hybrid_files[0],
     # hybrid_files[1],
@@ -354,13 +356,22 @@ brok_files = [
 ]
 popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
-IniPop = workbook.add_worksheet("Initial Population Statistics")
+# IniPop = workbook.add_worksheet("Initial Population Statistics")
 # DefSum = workbook.add_worksheet("Default Parameters Summary 10s")
 # DefFul = workbook.add_worksheet("Default Parameters Results 10s")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 # HybFul = workbook.add_worksheet("Hybrid 60s Results")
+RaoCompSum = workbook.add_worksheet("Rao Compare Summary")
+RaoComp = workbook.add_worksheet("Rao Compare")
+RaoCompSumls = workbook.add_worksheet("Rao Compare Summary Initial VND")
+RaoCompls = workbook.add_worksheet("Rao Compare Initial VND")
 
-popgen_benchmarks(IniPop, popgen_files)
+
+# popgen_benchmarks(IniPop, popgen_files)
+only_percentages(RaoCompSum, rao_compare_pop30)
+only_percentages(RaoCompSumls, rao_compare_pop30ls)
+full_results(RaoComp, rao_compare_pop30)
+full_results(RaoCompls, rao_compare_pop30ls)
 # only_percentages(HybSum, hybrid_files)
 # full_results(HybFul, hybrid_files)
 # only_percentages(DefSum, default_files)

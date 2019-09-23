@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 
-with open("results/CGA2_ls_10s_5000f_pop30_ls/3.json", "r") as file:
+with open("results/rao_compare_10s_50f_pop30/9.json", "r") as file:
     data = file.read()
     data = json.loads(data)
 
@@ -49,6 +49,7 @@ def get_score(ip, n_fails):
     first, second = split(ip, n_fails)
     return first[-1][2]/ip[-1][2]
 
+algs = ["rao1[VND]", "rao1[LF]", "jaya[VND]", "jaya[LF]", "jaya", "rao1"]
 for alg in data:
     plt.title(alg)
 
@@ -58,21 +59,25 @@ for alg in data:
 
 
 
-    all_scores = []
+    """all_scores = []
     for line in lines:
         line = repair_holes(line)
         scores = [[get_score(line, n)] for n in range(1, 200)]
         all_scores.append(scores)
     all_scores = np.mean(all_scores, axis=0)
-    plt.plot(all_scores)
+    plt.plot(all_scores)"""
 
-    """first, second = split(repair_holes(line), 5)
-    adjust = first[0][2]
-    xf = [l[0] for l in first]
-    yf = [l[2] - adjust for l in first]
-    xs = [l[0] - 1 for l in second]
-    ys = [l[2] - adjust for l in second]
-    plt.plot(xf, yf, "k", linewidth=.3)
-    plt.plot(xs, ys, "r", linewidth=.3)"""
+    for line in lines:
+        try:    
+            first, second = split(repair_holes(line), 5)
+            adjust = first[0][2]
+            xf = [l[0] for l in first]
+            yf = [l[2] - adjust for l in first]
+            xs = [l[0] - 1 for l in second]
+            ys = [l[2] - adjust for l in second]
+            plt.plot(xf, yf, "k", linewidth=.3)
+            plt.plot(xs, ys, "r", linewidth=.3)
+        except:
+            pass
 
     plt.show()
