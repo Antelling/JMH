@@ -15,9 +15,9 @@ for file in readdir(results_dir)
     alg_results = []
     println("$(length(results["control"])) entries")
     for (key, values) in results
-        times = [b[2] for b in values]
-        diversities = [b[3] for b in values]
-        scores = [((optimals["$(i)"][j]-b[1])/optimals["$(i)"][j])*100 for (j, b) in enumerate(values)]
+        times = [b["time"] for b in values]
+        diversities = [b["diversity"] for b in values]
+        scores = [((optimals["$(i)"][j]-b["score"])/optimals["$(i)"][j])*100 for (j, b) in enumerate(values)]
         push!(alg_results, (key, mean(scores), median(times), mean(diversities)))
     end
     sort!(alg_results, by=i->i[2])

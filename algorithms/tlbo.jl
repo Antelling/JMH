@@ -1,9 +1,9 @@
 """returns a configured TLBO instance"""
-function TLBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity, top_n::Int=1, v2::Bool=false)
+function TLBO_monad(;prob::Bool=true, repair_op::Function=VSRO, local_search::Function=identity, top_n::Int=1, lv2::Bool=false, tv2::Bool=false)
     return function TBO_mondad_internal(swarm::Swarm, problem::ProblemInstance; verbose::Int=0)
         swarm = TBO(swarm, problem, prob=prob, repair_op=repair_op,
-                verbose=verbose, local_search=local_search, top_n=top_n, v2=v2)[1]
-        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, v2=v2)
+                verbose=verbose, local_search=local_search, top_n=top_n, v2=tv2)[1]
+        return LBO(swarm, problem, repair_op=repair_op, verbose=verbose, local_search=local_search, v2=lv2)
     end
 end
 

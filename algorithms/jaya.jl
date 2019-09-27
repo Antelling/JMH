@@ -18,7 +18,7 @@ function jaya(swarm::Swarm, problem::ProblemInstance; repair_op::Function=VSRO,
     new_swarm = [(s, score_solution(s, problem)) for s in swarm]
     sort!(new_swarm, by=x -> x[2])
     best_solution = rand(new_swarm[1:top_n])[1]
-    worst_solution = rand(new_swarm[end-bottom_n:end])[1]
+    worst_solution = rand(new_swarm[end-bottom_n+1:end])[1]
     random_solution = rand(new_swarm)[1]
 
     for i in 1:length(swarm)

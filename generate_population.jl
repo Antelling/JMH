@@ -21,7 +21,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = problems_dir
 
 function main(;verbose::Int=0)
-	for dataset in 1:9
+	for dataset in [8]
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 
 		results = Vector{Vector{BitList}}()
@@ -30,7 +30,7 @@ function main(;verbose::Int=0)
 			println("")
 	        println("testing problem #$(problem.index)")
 
-	        swarm = greedy_construct(problem, 180, repair_op=VSRO, local_search=VND, verbose=1, max_time=10, max_attempts=1000000000)
+	        swarm = greedy_construct(problem, 180, repair_op=VSRO, local_search=VND, verbose=1, max_time=10, max_attempts=100000000000)
 
 			push!(results, swarm)
 		end
