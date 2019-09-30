@@ -21,7 +21,7 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const initial_pop_dir = "beasley_mdmkp_datasets/pop_subsets/"
 const n_fails = 50
 const time_limit = 10
-const initial_pop_dir_suffix = "selected"
+const initial_pop_dir_suffix = "best"
 const results_dir = "results/wide_survey$(time_limit)s_$(n_fails)f_$initial_pop_dir_suffix/"
 run(`mkdir -p $(results_dir)`)
 
