@@ -20,8 +20,8 @@ using Dates: today
 const problems_dir = "beasley_mdmkp_datasets/"
 const initial_pop_dir = "beasley_mdmkp_datasets/pop_subsets/"
 const n_fails = 50
-const time_limit = 10
-const initial_pop_dir_suffix = "best"
+const time_limit = 1
+const initial_pop_dir_suffix = "selected"
 const results_dir = "results/wide_survey$(time_limit)s_$(n_fails)f_$initial_pop_dir_suffix/"
 run(`mkdir -p $(results_dir)`)
 
@@ -33,7 +33,7 @@ struct ResultSet
 	improvement_points::ImprovementPoints
 end
 
-function main(;verbose::Int=0)
+function main(;verbose::Int=0, save_whole_swarm::Bool=false)
 
 	algorithms = [
 		(control_monad(), "control"),
@@ -95,12 +95,14 @@ function main(;verbose::Int=0)
 					#we also want to replace the swarm with a string of 0 and 1
 					newswarm = [(reduce(*, [x ? "1" : "0" for x in s]), score_solution(s, problem)) for s in newswarm]
 					sort!(newswarm, by=x->x[2])
-
+					if !save_whole_swarm
+						newswarm = [newswarm[1]]
+					end
 					result_set = ResultSet(best_score,elapsed_time,diversity,join(newswarm, ","),improvement_points)
 		            push!(results[name], result_set)
 				end
 
-				open(results_dir * "$(dataset).json", "w") do f
+				open(results_dir * "$(dataset)_pop$(popsize).json", "w") do f
 					write(f, JSON.json(results, 4))
 				end
 			end

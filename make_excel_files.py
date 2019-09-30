@@ -2,7 +2,7 @@ import xlsxwriter
 import json, os
 from numpy import mean, median
 
-workbook = xlsxwriter.Workbook('rao_comp.xlsx')
+workbook = xlsxwriter.Workbook('popsize_comp.xlsx')
 
 
 negative_format = workbook.add_format({'bg_color': 'green'})
@@ -266,6 +266,40 @@ def popgen_benchmarks(worksheet, files):
         j = 0
         i += 95
 
+def subset_comp(worksheet, subsets):
+    i, j = 0, 0
+    file,ds = subsets[0][0] #keep list of algorithms in same order
+    algs = json.loads(open("results/" + file, "r").read()).keys()
+    for alg in algs:
+        i+=1
+        worksheet.write(i,j,alg)
+    j += 1
+    for size_index in range(6):
+        for subset_index in range(3):
+            i = 0
+            file, ds = subsets[subset_index][size_index]
+            worksheet.write(i, j, file)
+            print("making: " + file)
+            results = json.loads(open("results/" + file, "r").read())
+            for alg in algs:
+                #we need to get the average percentage deviation
+                percentages = []
+                for p in range(6):
+                    mask = list(range(p, 90, 6))
+                    opts = [optimals[ds][m] for m in mask]
+                    data = [results[alg][m] for m in mask]
+                    for k in range(len(data)):
+                        percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
+                        percentages.append(percent)
+                average_score = mean(percentages)
+                #we also need the average time
+                average_time = mean([d["time"] for d in results[alg]])
+                i += 1
+                worksheet.write(i, j, average_score)
+                worksheet.write(i, j+1, average_time)
+            j += 2
+
+
 
 def _manhattan_distance(a, b):
     total = 0
@@ -361,21 +395,28 @@ popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(
 # DefFul = workbook.add_worksheet("Default Parameters Results 10s")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 # HybFul = workbook.add_worksheet("Hybrid 60s Results")
-RaoCompSum = workbook.add_worksheet("Rao Compare Summary")
-RaoComp = workbook.add_worksheet("Rao Compare")
-RaoCompSumls = workbook.add_worksheet("Rao Compare Summary Initial VND")
-RaoCompls = workbook.add_worksheet("Rao Compare Initial VND")
-
-
+# RaoCompSum = workbook.add_worksheet("Rao Compare Summary")
+# RaoComp = workbook.add_worksheet("Rao Compare")
+# RaoCompSumls = workbook.add_worksheet("Rao Compare Summary Initial VND")
+# RaoCompls = workbook.add_worksheet("Rao Compare Initial VND")
+#
+#
 # popgen_benchmarks(IniPop, popgen_files)
-only_percentages(RaoCompSum, rao_compare_pop30)
-only_percentages(RaoCompSumls, rao_compare_pop30ls)
-full_results(RaoComp, rao_compare_pop30)
-full_results(RaoCompls, rao_compare_pop30ls)
+# only_percentages(RaoCompSum, rao_compare_pop30)
+# only_percentages(RaoCompSumls, rao_compare_pop30ls)
+# full_results(RaoComp, rao_compare_pop30)
+# full_results(RaoCompls, rao_compare_pop30ls)
 # only_percentages(HybSum, hybrid_files)
 # full_results(HybFul, hybrid_files)
 # only_percentages(DefSum, default_files)
 # full_results(DefFul, default_files)
+
+best_subset = [("wide_survey10s_50f_best/" + str(i) + ".json", str(i)) for i in range(1, 7)]
+rand_subset = [("wide_survey10s_50f_rand/" + str(i) + ".json", str(i)) for i in range(1, 7)]
+selected_subset = [("wide_survey10s_50f_selected/" + str(i) + ".json", str(i)) for i in range(1, 7)]
+
+SubComp = workbook.add_worksheet("Subset Comparison")
+subset_comp(SubComp, [best_subset, rand_subset, selected_subset])
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
