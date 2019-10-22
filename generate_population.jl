@@ -21,12 +21,13 @@ const problems_dir = "beasley_mdmkp_datasets/"
 const results_dir = problems_dir
 
 function main(;verbose::Int=0)
-	for dataset in [8]
+	for dataset in [7]
 	    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 
 		results = Vector{Vector{BitList}}()
 
 	    for problem in problems[1+length(results):end]
+			problem = decimate_lowerbounds(problem)
 			println("")
 	        println("testing problem #$(problem.index)")
 
@@ -34,7 +35,7 @@ function main(;verbose::Int=0)
 
 			push!(results, swarm)
 		end
-		open(results_dir * "$(dataset)_pop180_ls.json", "w") do f
+		open(results_dir * "$(dataset)_pop180_ls_decimated.json", "w") do f
 			write(f, JSON.json(results))
 		end
 	end

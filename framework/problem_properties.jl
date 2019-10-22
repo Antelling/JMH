@@ -37,3 +37,12 @@ function get_min_on(weights::Vector{Int}, min_value::Int)
     end
     return i
 end
+
+
+function decimate_lowerbounds(problem::ProblemInstance)
+    new_lower_bounds::Vector{Tuple{Vector{Int},Int}} = []
+    for lower_bound in problem.lower_bounds
+        push!(new_lower_bounds, Tuple([lower_bound[1], floor(lower_bound[2]/10)]))
+    end
+    return ProblemInstance(problem.objective, problem.upper_bounds, new_lower_bounds, problem.index)
+end
