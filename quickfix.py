@@ -16,6 +16,6 @@ def get_lengths(obj):
 
 files = range(1, 10)
 for file in files:
-    filename = f"beasley_mdmkp_datasets/initial_pop/{file}_pop180_ls.json"
+    filename = f"beasley_mdmkp_datasets/{file}_pop180_ls_decimated.json"
     data = json.loads(open(filename).read())
     print(file, ": ", get_lengths(data))

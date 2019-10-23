@@ -18,11 +18,11 @@ using Dates: today
 # import Random
 
 const problems_dir = "beasley_mdmkp_datasets/"
-const initial_pop_dir = "beasley_mdmkp_datasets/pop_subsets/"
+const initial_pop_dir = "beasley_mdmkp_datasets/dec_pop_subsets/"
 const n_fails = 50
-const time_limit = 1
-const initial_pop_dir_suffix = "selected"
-const results_dir = "results/wide_survey$(time_limit)s_$(n_fails)f_$initial_pop_dir_suffix/"
+const time_limit = 10
+const initial_pop_dir_suffix = "rand"
+const results_dir = "results/dec_wide_survey$(time_limit)s_$(n_fails)f_$initial_pop_dir_suffix/"
 run(`mkdir -p $(results_dir)`)
 
 struct ResultSet
@@ -48,8 +48,8 @@ function main(;verbose::Int=0, save_whole_swarm::Bool=false)
 		(iterate_monad(jaya_monad(local_search=VND, top_n=15, bottom_n=15, perturb=rao2_perturb), n_fails=n_fails, time_limit=time_limit), "rao2_ls"),
 	]
 
-	for popsize in [30, 60, 90, 120]
-		for dataset in 1:6
+	for popsize in [30, 60, 90, 120, 150, 180]
+		for dataset in 1:9
 		    problems = parse_file(problems_dir * "mdmkp_ct$(dataset).txt")
 			populations::Vector{Vector{BitList}} = JSON.parsefile(initial_pop_dir * "$(dataset)_$(initial_pop_dir_suffix)$(popsize).json")
 

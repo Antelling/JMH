@@ -65,18 +65,19 @@ function make_diverse_subset(population::Swarm, problem::ProblemInstance, n::Int
 end
 
 function main()
-    for file in 1:6
+    for file in 1:9
         println("generating for file $file")
-        filename = "beasley_mdmkp_datasets/initial_pop/$(file)_pop180_ls.json"
+        filename = "beasley_mdmkp_datasets/initial_pop/$(file)_pop180_ls_decimated.json"
         data::Vector{Swarm} = JSON.parsefile(filename)
         problems = parse_file("beasley_mdmkp_datasets/mdmkp_ct$(file).txt")
+        problems = [decimate_lowerbounds(problem) for problem in problems]
         blah = []
-        for size in [30, 60, 90, 120]
+        for size in [30, 60, 90, 120, 150, 180]
             print("size is: $size... ")
             for i in 1:90
-                push!(blah, take_best_subset(data[i], problems[i], size))
+                push!(blah, make_random_subset(data[i], problems[i], size))
             end
-            open("beasley_mdmkp_datasets/pop_subsets/$(file)_best$(size).json", "w") do f
+            open("beasley_mdmkp_datasets/dec_pop_subsets/$(file)_rand$(size).json", "w") do f
                 write(f, JSON.json(blah))
             end
         end

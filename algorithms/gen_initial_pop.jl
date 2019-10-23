@@ -1,7 +1,8 @@
 """if we sample with a biased probability, a normal distribution of turned on
 bits will be created. Our bias directly informs the mean. The number of
 variables informs the standard deviation."""
-function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0, repair_op::Function=VSRO)
+function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose::Int=0,
+        repair_op::Function=VSRO, local_search::Function=identity, max_time::Int=60)
     r = get_solution_range(problem)
     v = length(problem.objective)
     percentage = sum(r)/(2v)
@@ -11,7 +12,8 @@ function random_init(problem::ProblemInstance, n_solutions::Int=50; verbose::Int
     end
     passes = 0
     fails = 0
-    while length(valid_solutions) < n_solutions
+    start_time = time()
+    while length(valid_solutions) < n_solutions && time() - start_time < max_time
         possible_solution::BitList = map(i->i<percentage, rand(v))
         if is_valid(possible_solution, problem)
             push!(valid_solutions, possible_solution)

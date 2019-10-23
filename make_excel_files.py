@@ -9,6 +9,7 @@ negative_format = workbook.add_format({'bg_color': 'green'})
 normal_format = workbook.add_format({})
 bitstring_format = workbook.add_format({'shrink': True, 'font_color': 'gray'})
 title_format = workbook.add_format({'bold': True})
+deemph_format = workbook.add_format({'font_color': 'gray'})
 
 i = 0
 j = 0
@@ -216,6 +217,32 @@ def full_results(worksheet, files):
         i += 18
         j = 0
 
+
+def loooong_matrix(worksheet):
+    i = 0
+    j = 0
+    for popsize in [30, 60, 90, 120]:
+        percentages = []
+        for dataset in range(1, 7):
+            file = "wide_survey10s_50f_best/" + str(dataset) + "_pop" + str(popsize) + ".json"
+            print("making: " + file)
+            results = json.loads(open("results/" + file, "r").read())
+            worksheet.write(i, j, str(file), title_format)
+            for p in range(6):
+                mask = list(range(p, 90, 6))
+                opts = [optimals[str(dataset)][m] for m in mask]
+                for alg in results:
+                    data = [results[alg][m] for m in mask]
+                    for k in range(len(data)):
+                        percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
+                        percentages.append(percent)
+        worksheet.write(i, j, popsize)
+        for p in percentages:
+            i+=1
+            worksheet.write(i, j, p)
+        i = 0
+        j += 1
+
 def popgen_benchmarks(worksheet, files):
     i = 0
     j = 0
@@ -266,38 +293,47 @@ def popgen_benchmarks(worksheet, files):
         j = 0
         i += 95
 
-def subset_comp(worksheet, subsets):
+def subset_comp(worksheet, dir_root, dir_suffixes):
     i, j = 0, 0
-    file,ds = subsets[0][0] #keep list of algorithms in same order
-    algs = json.loads(open("results/" + file, "r").read()).keys()
-    for alg in algs:
-        i+=1
-        worksheet.write(i,j,alg)
-    j += 1
-    for size_index in range(6):
-        for subset_index in range(3):
-            i = 0
-            file, ds = subsets[subset_index][size_index]
-            worksheet.write(i, j, file)
-            print("making: " + file)
-            results = json.loads(open("results/" + file, "r").read())
-            for alg in algs:
-                #we need to get the average percentage deviation
-                percentages = []
-                for p in range(6):
-                    mask = list(range(p, 90, 6))
-                    opts = [optimals[ds][m] for m in mask]
-                    data = [results[alg][m] for m in mask]
-                    for k in range(len(data)):
-                        percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
-                        percentages.append(percent)
-                average_score = mean(percentages)
-                #we also need the average time
-                average_time = mean([d["time"] for d in results[alg]])
-                i += 1
-                worksheet.write(i, j, average_score)
-                worksheet.write(i, j+1, average_time)
-            j += 2
+    algs = json.loads(open("results/" + dir_root + dir_suffixes[0] + "/1_pop30.json", "r").read()).keys()
+    for dataset in range(1, 7):
+        worksheet.write(i, j, "dataset: " + str(dataset), title_format)
+        i += 1
+        start_i = i
+        for alg in algs:
+            i+=1
+            worksheet.write(i+1,j,alg,title_format)
+        j += 1
+        for popsize in [30, 60, 90, 120]:
+            for suffix in dir_suffixes:
+                i = start_i
+                file = dir_root + suffix + "/" + str(dataset) + "_pop" + str(popsize) + ".json"
+                worksheet.write(i, j, suffix + str(popsize), title_format)
+                i+=1
+                worksheet.write(i, j, "% dev", title_format)
+                worksheet.write(i, j+1, "time", title_format)
+                print("making: " + suffix + str(popsize))
+                results = json.loads(open("results/" + file, "r").read())
+                for alg in algs:
+                    #we need to get the average percentage deviation
+                    percentages = []
+                    for p in range(6):
+                        mask = list(range(p, 90, 6))
+                        opts = [optimals[str(dataset)][m] for m in mask]
+                        data = [results[alg][m] for m in mask]
+                        for k in range(len(data)):
+                            percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
+                            percentages.append(percent)
+                    average_score = mean(percentages)
+                    #we also need the average time
+                    average_time = mean([d["time"] for d in results[alg]])
+                    i += 1
+                    worksheet.write(i, j, average_score)
+                    worksheet.write(i, j+1, average_time, deemph_format)
+                j += 2
+        j = 0
+        i += 3
+        print(i)
 
 
 
@@ -395,6 +431,8 @@ popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(
 # DefFul = workbook.add_worksheet("Default Parameters Results 10s")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 # HybFul = workbook.add_worksheet("Hybrid 60s Results")
+Loooong = workbook.add_worksheet("popsize comp")
+loooong_matrix(Loooong)
 # RaoCompSum = workbook.add_worksheet("Rao Compare Summary")
 # RaoComp = workbook.add_worksheet("Rao Compare")
 # RaoCompSumls = workbook.add_worksheet("Rao Compare Summary Initial VND")
@@ -411,12 +449,8 @@ popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(
 # only_percentages(DefSum, default_files)
 # full_results(DefFul, default_files)
 
-best_subset = [("wide_survey10s_50f_best/" + str(i) + ".json", str(i)) for i in range(1, 7)]
-rand_subset = [("wide_survey10s_50f_rand/" + str(i) + ".json", str(i)) for i in range(1, 7)]
-selected_subset = [("wide_survey10s_50f_selected/" + str(i) + ".json", str(i)) for i in range(1, 7)]
-
-SubComp = workbook.add_worksheet("Subset Comparison")
-subset_comp(SubComp, [best_subset, rand_subset, selected_subset])
+# SubComp = workbook.add_worksheet("Subset Comparison")
+# subset_comp(SubComp, "wide_survey10s_50f_", ["best", "rand", "selected"])
 
 # test = workbook.add_worksheet("test")
 # similarity_matrixes(test, [("gigantic_search/1.json", "1")])
