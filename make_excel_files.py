@@ -49,6 +49,7 @@ def only_percentages(worksheet, files):
                 times = []
                 diversities = []
                 for k in range(len(data)):
+                    data[k] = {"time": data[k][1], "score": data[k][0], "diversity": data[k][2], "bitlist": data[k][3]}
                     percent = 0 if opts[k] == 0 else 100*((opts[k]-data[k]["score"])/opts[k])
                     worksheet.write(i+2+k, j, percent)
                     percentages.append(percent)
@@ -427,12 +428,12 @@ brok_files = [
 popgen_files = [("benchmark_popgen/" + str(i) + ".json", str(i)) for i in range(1, 10)]
 
 # IniPop = workbook.add_worksheet("Initial Population Statistics")
-# DefSum = workbook.add_worksheet("Default Parameters Summary 10s")
+DefSum = workbook.add_worksheet("Default Parameters Summary 10s")
 # DefFul = workbook.add_worksheet("Default Parameters Results 10s")
 # HybSum = workbook.add_worksheet("Hybrid 60s Summary")
 # HybFul = workbook.add_worksheet("Hybrid 60s Results")
-Loooong = workbook.add_worksheet("popsize comp")
-loooong_matrix(Loooong)
+# Loooong = workbook.add_worksheet("popsize comp")
+# loooong_matrix(Loooong)
 # RaoCompSum = workbook.add_worksheet("Rao Compare Summary")
 # RaoComp = workbook.add_worksheet("Rao Compare")
 # RaoCompSumls = workbook.add_worksheet("Rao Compare Summary Initial VND")
@@ -446,7 +447,7 @@ loooong_matrix(Loooong)
 # full_results(RaoCompls, rao_compare_pop30ls)
 # only_percentages(HybSum, hybrid_files)
 # full_results(HybFul, hybrid_files)
-# only_percentages(DefSum, default_files)
+only_percentages(DefSum, hybrid_files)
 # full_results(DefFul, default_files)
 
 # SubComp = workbook.add_worksheet("Subset Comparison")
